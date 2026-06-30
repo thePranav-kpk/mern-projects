@@ -15,6 +15,23 @@ app.get("/", (req, res) => {
   res.send("Todo list backend server is running");
 });
 
+app.get("/api/v1/todos", (req, res) => {
+  res.status(200).json({
+    todos: [
+      {
+        id: 1,
+        title: "Buy groceries",
+        completed: false,
+      },
+      {
+        id: 2,
+        title: "Read a book",
+        completed: true,
+      },
+    ],
+  });
+});
+
 const start = async () => {
   try {
     await connectDB(process.env.MONGO_URI);
