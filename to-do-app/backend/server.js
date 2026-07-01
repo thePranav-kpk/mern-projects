@@ -34,6 +34,19 @@ app.post("/api/v1/todos", async (req, res) => {
   }
 });
 
+app.get("/api/v1/todos/:id", async (req, res) => {
+  try {
+    const { id: todoId } = req.params;
+    const todo = await Todo.findOne({ _id: todoId });
+    if (!todo) {
+      return res.status(404).json({ msg: "Todo not found" });
+    }
+    res.status(200).json({ todo });
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+});
+
 const start = async () => {
   try {
     await connectDB(process.env.MONGO_URI);
