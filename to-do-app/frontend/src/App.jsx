@@ -3,7 +3,8 @@ import TodoForm from "./components/TodoForm";
 import TodoList from "./components/TodoList";
 import "./App.css";
 
-const API_URL = "http://localhost:5000/api/v1/todos";
+// Changed to relative endpoint (Vite proxy forwards this to port 5000)
+const API_URL = "/api/v1/todos";
 
 function App() {
   const [todos, setTodos] = useState([]);
