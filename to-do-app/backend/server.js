@@ -63,6 +63,19 @@ app.patch("/api/v1/todos/:id", async (req, res) => {
   }
 });
 
+app.delete("/api/v1/todos/:id", async (req, res) => {
+  try {
+    const { id: todoId } = req.params;
+    const todo = await Todo.findOneAndDelete({ _id: todoId });
+    if (!todo) {
+      return res.status(404).json({ msg: "Todo not found" });
+    }
+    res.status(200).json({ todo });
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+});
+
 const start = async () => {
   try {
     await connectDB(process.env.MONGO_URI);
