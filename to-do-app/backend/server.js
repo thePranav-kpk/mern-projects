@@ -25,6 +25,15 @@ app.get("/api/v1/todos", async (req, res) => {
   }
 });
 
+app.post("/api/v1/todos", async (req, res) => {
+  try {
+    const todo = await Todo.create(req.body);
+    res.status(201).json({ todo });
+  } catch (error) {
+    res.status(500).json({ msg: error.message });
+  }
+});
+
 const start = async () => {
   try {
     await connectDB(process.env.MONGO_URI);
