@@ -1,5 +1,6 @@
 const Todo = require("../models/Todo");
 const asyncWrapper = require("../middleware/async");
+const { createCustomError } = require("../errors/custom-error");
 
 const getAllTodos = asyncWrapper(async (req, res) => {
   const todos = await Todo.find({});
@@ -15,7 +16,7 @@ const getTodo = asyncWrapper(async (req, res) => {
   const { id: todoId } = req.params;
   const todo = await Todo.findOne({ _id: todoId });
   if (!todo) {
-    return res.status(404).json({ msg: "Todo not found" });
+    return next(createCustomError(`No todo with id: ${todoId}`, 404));
   }
   res.status(200).json({ todo });
 });
@@ -27,7 +28,7 @@ const updateTodo = asyncWrapper(async (req, res) => {
     runValidators: true,
   });
   if (!todo) {
-    return res.status(404).json({ msg: "Todo not found" });
+    return next(createCustomError(`No todo with id: ${todoId}`, 404));
   }
   res.status(200).json({ todo });
 });
@@ -36,7 +37,7 @@ const deleteTodo = asyncWrapper(async (req, res) => {
   const { id: todoId } = req.params;
   const todo = await Todo.findOneAndDelete({ _id: todoId });
   if (!todo) {
-    return res.status(404).json({ msg: "Todo not found" });
+    return next(createCustomError(`No todo with id: ${todoId}`, 404));
   }
   res.status(200).json({ todo });
 });

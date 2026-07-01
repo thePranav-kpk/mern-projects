@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./db/connect");
 const todos = require("./routes/todos");
+const notFound = require("./middleware/not-found");
+const errorHandlerMiddleware = require("./middleware/error-handler");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -16,6 +18,8 @@ app.get("/", (req, res) => {
   res.send("Todo list backend server is running");
 });
 app.use("/api/v1/todos", todos);
+app.use(notFound); // Handle 404 errors for undefined routes
+app.use(errorHandlerMiddleware); // Handle errors
 
 const start = async () => {
   try {
