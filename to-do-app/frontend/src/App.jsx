@@ -3,8 +3,10 @@ import TodoForm from "./components/TodoForm";
 import TodoList from "./components/TodoList";
 import "./App.css";
 
-// Changed to relative endpoint (Vite proxy forwards this to port 5000)
-const API_URL = "/api/v1/todos";
+// Switch URL dynamically based on environment
+const API_URL = import.meta.env.DEV
+  ? "/api/v1/todos"
+  : "https://todo-backend-whej.onrender.com/api/v1/todos"; // Actual Render backend URL here
 
 function App() {
   const [todos, setTodos] = useState([]);

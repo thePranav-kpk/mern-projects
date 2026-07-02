@@ -14,9 +14,6 @@ app.use(cors()); // Enable CORS for all HTTP requests
 app.use(express.json()); //Parse incoming JSON requests
 
 // Routes
-app.get("/", (req, res) => {
-  res.send("Todo list backend server is running");
-});
 app.use("/api/v1/todos", todos);
 app.use(notFound); // Handle 404 errors for undefined routes
 app.use(errorHandlerMiddleware); // Handle errors
