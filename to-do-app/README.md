@@ -1,5 +1,9 @@
 # MERN Task Manager (Todo App)
 
+*   **Live Application**: [https://todo-app-sm1n.onrender.com](https://todo-app-sm1n.onrender.com)
+*   **Live API Endpoint**: [https://todo-backend-whej.onrender.com/api/v1/todos](https://todo-backend-whej.onrender.com/api/v1/todos)
+
+
 A modern, responsive Todo application built using the MERN stack (MongoDB, Express, React, Node.js). This project implements a fully decoupled client-server architecture with a development proxy, custom error classes, clean route-controller separations, and dynamic state synchronization.
 
 ---
