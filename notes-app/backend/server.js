@@ -5,6 +5,7 @@ const connectDB = require("./db/connect");
 
 // Import router
 const authRouter = require("./routes/auth");
+const notesRouter = require("./routes/notes");
 
 // Import middleware
 const notFound = require("./middleware/not-found");
@@ -22,7 +23,10 @@ app.get("/", (req, res) => {
   res.send("<h1>Notes App API</h1>");
 });
 
+// Mount routers
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/notes", notesRouter);
+
 app.use(notFound);
 app.use(errorHandlerMiddleware);
 
