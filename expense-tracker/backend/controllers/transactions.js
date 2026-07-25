@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const { StatusCodes } = require("http-status-codes");
 const Transaction = require("../models/Transaction");
 const { createCustomError } = require("../errors/custom-error");
@@ -89,9 +90,47 @@ const deleteTransaction = asyncWrapper(async (req, res, next) => {
     .json({ msg: "Transaction deleted succesfully", transaction });
 });
 
+// 5. Get Financial Summary (Total Income, Total Expense, Net Balance)
+const getSummary = asyncWrapper(async (req, res, next) => {
+  const stats = await Transaction.aggregate([
+    {
+      $match: {
+        userId: new mongoose.Types.ObjectId(req.user.userId),
+      },
+    },
+    {
+      $group: {
+        _id: "$type",
+        totalAmount: { $sum: "$amount" },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  // Transform aggregate array into clean summary metrics
+  let totalIncome = 0;
+  let totalExpense = 0;
+
+  stats.forEach((item) => {
+    if (item._id === "income") totalIncome = item.totalAmount;
+    if (item._id === "expense") totalExpense = item.totalAmount;
+  });
+
+  const netBalance = totalIncome - totalExpense;
+
+  res.status(StatusCodes.OK).json({
+    summary: {
+      totalIncome,
+      totalExpense,
+      netBalance,
+    },
+  });
+});
+
 module.exports = {
   getTransactions,
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  getSummary,
 };
