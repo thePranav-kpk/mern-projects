@@ -5,6 +5,7 @@ const connectDB = require("./db/connect");
 
 // Import routers
 const authRouter = require("./routes/auth");
+const transactionsRouter = require("./routes/transactions");
 
 // Import middleware
 const notFound = require("./middleware/not-found");
@@ -19,6 +20,7 @@ app.use(express.json());
 
 // Mount Auth Router
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/transactions", transactionsRouter);
 
 // Fallback middlewares
 app.use(notFound);
