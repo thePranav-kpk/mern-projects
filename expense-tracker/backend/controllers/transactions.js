@@ -127,10 +127,45 @@ const getSummary = asyncWrapper(async (req, res, next) => {
   });
 });
 
+// 6. Get Category Breakdown for Pie Charts (default type: 'expense')
+const getCategoryBreakdown = asyncWrapper(async (req, res, next) => {
+  const { type } = req.query;
+
+  const breakdown = await Transaction.aggregate([
+    {
+      $match: {
+        userId: new mongoose.Types.ObjectId(req.user.userId),
+        type: type || "expense",
+      },
+    },
+    {
+      $group: {
+        _id: "$category",
+        total: { $sum: "$amount" },
+        count: { $sum: 1 },
+      },
+    },
+    {
+      $sort: { total: -1 },
+    },
+    {
+      $project: {
+        _id: 0,
+        category: "$_id",
+        total: 1,
+        count: 1,
+      },
+    },
+  ]);
+
+  res.status(StatusCodes.OK).json({ breakdown });
+});
+
 module.exports = {
   getTransactions,
   createTransaction,
   updateTransaction,
   deleteTransaction,
   getSummary,
+  getCategoryBreakdown,
 };
