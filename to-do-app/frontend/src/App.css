@@ -101,6 +101,7 @@
   flex: 1;
   transition: var(--transition);
   position: relative;
+  -webkit-user-select: none;
   user-select: none;
 }
 
