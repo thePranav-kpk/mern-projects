@@ -29,7 +29,7 @@ const Login = () => {
     <div className="auth-container">
       <form className="auth-card" onSubmit={handleSubmit}>
         <h2>Welcome Back</h2>
-        <p>Log in to access your secure notes</p>
+        <p>Log in to access your expense tracker</p>
         {error && <div className="error-message">{error}</div>}
         <div className="input-group">
           <label htmlFor="email">Email Address</label>
