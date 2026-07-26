@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const connectDB = require("./db/connect");
 
 // Import routers
@@ -18,9 +19,16 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Mount Auth Router
+app.use(express.static(path.resolve(__dirname, "../frontend/dist")));
+
+// Mount API Routers
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/transactions", transactionsRouter);
+
+// Redirect all other GET requests to React's index.html
+app.get(/^(.*)$/, (req, res) => {
+  res.sendFile(path.resolve(__dirname, "../frontend/dist", "index.html"));
+});
 
 // Fallback middlewares
 app.use(notFound);
