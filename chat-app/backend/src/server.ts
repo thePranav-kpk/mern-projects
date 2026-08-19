@@ -10,6 +10,7 @@ import { Server } from "socket.io";
 
 import connectDB from "./config/db";
 import authRoutes from "./routes/auth";
+import messageRoutes from "./routes/message";
 import { wrapSession, socketAuth } from "./middleware/socketAuth";
 import { registerChatHandlers } from "./sockets/chatHandler";
 
@@ -63,14 +64,15 @@ registerChatHandlers(io);
 
 // 5. Mount Auth Router
 app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
 
 // 6. Start HTTP Server & WebSocket Server
 const start = async (): Promise<void> => {
   try {
     await connectDB(process.env.MONGO_URI || "");
     console.log("Connected to MongoDB successfully...");
-    
-    // Both HTTP and WebSocket start on same port 
+
+    // Both HTTP and WebSocket start on same port
     httpServer.listen(port, () => {
       console.log(`Server is listening on port ${port}...`);
     });
