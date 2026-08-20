@@ -9,7 +9,7 @@ export const getRoomMessages = async (req: Request, res: Response) => {
   }
 
   const messages = await Message.find({ room })
-    .populate("sender", "user email")
+    .populate("sender", "name email")
     .sort({ createdAt: 1 });
 
   res.status(StatusCodes.OK).json({ room, messages });
