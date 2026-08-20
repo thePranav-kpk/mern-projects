@@ -48,5 +48,73 @@ export const registerChatHandlers = (io: Server) => {
         }
       },
     );
+
+    socket.on(
+      "edit_message",
+      async (data: { messageId: string; room: string; newContent: string }) => {
+        try {
+          const { messageId, room, newContent } = data;
+          const userId = socket.data.userId;
+
+          // Verify userId and content
+          if (!userId || !newContent.trim()) return;
+
+          const message = await Message.findById(messageId);
+
+          // Verify the existence of message
+          if (!message || message.sender.toString() !== userId) {
+            return socket.emit("error", "Unauthorized access");
+          }
+
+          // Update the message content
+          message.content = newContent.trim();
+          message.isEdited = true;
+
+          // Save to DB
+          await message.save();
+
+          // Populate the message to fetch name & email and pass to sender instead of userId
+          const populatedMessage = await message.populate(
+            "sender",
+            "name email",
+          );
+
+          io.to(room).emit("message_edited", populatedMessage);
+        } catch (err) {
+          console.log("Error in editing message: ", err);
+        }
+      },
+    );
+
+    socket.on(
+      "delete_message",
+      async (data: { messageId: string; room: string }) => {
+        try {
+          const { messageId, room } = data;
+          const userId = socket.data.userId;
+
+          if (!userId) return;
+
+          const message = await Message.findById(messageId);
+          if (!message || message.sender.toString() !== userId) {
+            return socket.emit("error", "Unauthorized access");
+          }
+
+          message.isDeleted = true;
+          message.content = "This message is deleted";
+
+          await message.save();
+
+          const populatedMessage = await message.populate(
+            "sender",
+            "name email",
+          );
+
+          io.to(room).emit("message_deleted", populatedMessage);
+        } catch (err) {
+          console.log("Error in deleting message: ", err);
+        }
+      },
+    );
   });
 };
