@@ -7,8 +7,13 @@ interface Message {
   sender: { _id: string; name: string; email: string };
   room: string;
   content: string;
+  isEdited?: boolean;
+  isDeleted?: boolean;
   createdAt: string;
+  updatedAt: string;
 }
+
+type EditingMessageType = { id: string; content: string };
 
 const ChatRoom = () => {
   const { user, logout } = useAuth();
@@ -16,6 +21,8 @@ const ChatRoom = () => {
   const [activeRoom, setActiveRoom] = useState<string>("general");
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState<string>("");
+  const [editingMessage, setEditingMessage] =
+    useState<EditingMessageType | null>(null);
 
   const rooms = ["general", "tech", "other"];
 
@@ -52,14 +59,60 @@ const ChatRoom = () => {
     };
   }, [activeRoom, socket]);
 
+  // Event listener on editing message
+  useEffect(() => {
+    socket?.on("message_edited", (editedMessage) => {
+      setMessages((prevMessages) => {
+        return prevMessages.map((message) => {
+          if (message._id === editedMessage._id) return editedMessage;
+          return message;
+        });
+      });
+    });
+
+    return () => {
+      socket?.off("message_edited");
+    };
+  }, [socket]);
+
+  // Event listener on deleting message
+  useEffect(() => {
+    socket?.on("message_deleted", (deletedMessage) => {
+      setMessages((prevMessages) => {
+        return prevMessages.map((message) => {
+          if (message._id === deletedMessage._id) return deletedMessage;
+          return message;
+        });
+      });
+    });
+
+    return () => {
+      socket?.off("message_deleted");
+    };
+  }, [socket]);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
 
-    socket?.emit("send_message", {
-      room: activeRoom,
-      content: inputText.trim(),
-    });
+    if (editingMessage) {
+      socket?.emit("edit_message", {
+        messageId: editingMessage.id,
+        room: activeRoom,
+        newContent: inputText.trim(),
+      });
+      setEditingMessage(null);
+    } else {
+      socket?.emit("send_message", {
+        room: activeRoom,
+        content: inputText.trim(),
+      });
+    }
+    setInputText("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessage(null);
     setInputText("");
   };
 
@@ -134,24 +187,67 @@ const ChatRoom = () => {
               return (
                 <div
                   key={message._id}
-                  className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}
+                  className={`flex flex-col ${isMine ? "items-end" : "items-start"} group`}
                 >
                   <div className="flex items-center gap-2 mb-1 px-1">
                     <span className="text-xs font-medium text-slate-400">
                       {isMine ? "You" : message.sender?.name || "Unknown"}
                     </span>
                     <span className="text-[10px] text-slate-500">
-                      {new Date(message.createdAt).toLocaleTimeString([], {
+                      {new Date(
+                        message.isEdited && message.updatedAt
+                          ? message.updatedAt
+                          : message.createdAt,
+                      ).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </span>
+                    {message.isEdited && !message.isDeleted && (
+                      <span className="text-[10px] text-slate-500 italic">
+                        (edited)
+                      </span>
+                    )}
+
+                    {/* Edit / Delete triggers for own messages */}
+                    {isMine && !message.isDeleted && (
+                      <div className="flex items-center gap-2 text-[11px] ml-2 opacity-0 group-hover:opacity-100 transition">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingMessage({
+                              id: message._id,
+                              content: message.content,
+                            });
+                            setInputText(message.content);
+                          }}
+                          className="text-indigo-400 hover:underline"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            socket?.emit("delete_message", {
+                              messageId: message._id,
+                              room: activeRoom,
+                            });
+                          }}
+                          className="text-rose-400 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
+
                   <div
                     className={`max-w-md px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                      isMine
-                        ? "bg-indigo-600 text-white rounded-br-none"
-                        : "bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700/50"
+                      message.isDeleted
+                        ? "bg-slate-900/60 text-slate-500 italic border border-slate-800 rounded-lg"
+                        : isMine
+                          ? "bg-indigo-600 text-white rounded-br-none"
+                          : "bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700/50"
                     }`}
                   >
                     {message.content}
@@ -162,6 +258,20 @@ const ChatRoom = () => {
           )}
         </div>
 
+        {/* Editing Banner Indicator */}
+        {editingMessage && (
+          <div className="px-4 py-2 bg-indigo-950/60 border-t border-indigo-800/40 text-xs text-indigo-300 flex justify-between items-center">
+            <span>Editing message...</span>
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="text-indigo-400 hover:text-white font-bold text-sm px-2"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Message Input Bar */}
         <form
           onSubmit={handleSubmit}
@@ -171,14 +281,16 @@ const ChatRoom = () => {
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder={`Message #${activeRoom}...`}
+            placeholder={
+              editingMessage ? "Edit message..." : `Message #${activeRoom}...`
+            }
             className="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500"
           />
           <button
             type="submit"
             className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl text-sm transition"
           >
-            Send
+            {editingMessage ? "Save" : "Send"}
           </button>
         </form>
       </div>
