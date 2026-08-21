@@ -14,6 +14,7 @@ interface Message {
 }
 
 type EditingMessageType = { id: string; content: string };
+type OnlineUsersType = { _id: string; name: string; email: string };
 
 const ChatRoom = () => {
   const { user, logout } = useAuth();
@@ -26,6 +27,7 @@ const ChatRoom = () => {
   const [typingUser, setTypingUser] = useState<string>("");
   const typingTimeoutRef = useRef<number | null>(null);
   const [showFullText, setShowFullText] = useState<boolean>(true);
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUsersType[]>([]);
 
   const rooms = ["general", "tech", "other"];
 
@@ -118,6 +120,20 @@ const ChatRoom = () => {
     };
   }, [typingUser]);
 
+  // Event listener for online users
+  useEffect(() => {
+    socket?.on(
+      "room_users",
+      (data: { room: string; onlineUsers: OnlineUsersType[] }) => {
+        if (data.room === activeRoom) setOnlineUsers(data.onlineUsers);
+      },
+    );
+
+    return () => {
+      socket?.off("room_users");
+    };
+  }, [socket, activeRoom]);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
@@ -196,6 +212,31 @@ const ChatRoom = () => {
                 </button>
               );
             })}
+          </div>
+
+          {/* Online Users (Left Column) */}
+          <div className="mt-6 pt-4 border-t border-slate-800 px-2">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              Online Users ({onlineUsers.length})
+            </h3>
+            <ul className="space-y-2 max-h-48 overflow-y-auto">
+              {onlineUsers.map((onlineUser) => (
+                <li
+                  key={onlineUser._id}
+                  className="flex items-center gap-2 text-xs text-slate-300 py-1"
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="truncate font-medium">
+                    {onlineUser.name}
+                  </span>
+                  {onlineUser._id === user?._id && (
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      (you)
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 

@@ -2,6 +2,20 @@ import { Server, Socket } from "socket.io";
 import Message from "../models/Message";
 import User from "../models/User";
 
+// Helper function to calculate online users
+const broadcastRoomUsers = async (io: Server, room: string) => {
+  const roomSockets = await io.in(room).fetchSockets();
+  const uniqueUsers = Array.from(
+    new Set(roomSockets.map((socket) => socket.data.userId)),
+  );
+
+  const onlineUsers = await User.find({ _id: { $in: uniqueUsers } }).select(
+    "name email",
+  );
+
+  io.to(room).emit("room_users", { room, onlineUsers });
+};
+
 // Attaches real-time event listeners
 export const registerChatHandlers = (io: Server) => {
   io.on("connection", (socket) => {
@@ -13,8 +27,24 @@ export const registerChatHandlers = (io: Server) => {
       console.log(`User disconnected: Socket ID [${socket.id}]`);
     });
 
-    socket.on("join_room", (room: string) => {
+    socket.on("disconnecting", () => {
+      const roomsToUpdate = Array.from(socket.rooms);
+
+      // Current online users after disconnected
+      setTimeout(async () => {
+        for (const room of roomsToUpdate) {
+          if (room !== socket.id) {
+            await broadcastRoomUsers(io, room);
+          }
+        }
+      }, 50);
+    });
+
+    socket.on("join_room", async (room: string) => {
       socket.join(room);
+
+      // Current online users after joining room
+      await broadcastRoomUsers(io, room);
       console.log(`User [${socket.data.userId}] joined room [${room}]`);
     });
 
