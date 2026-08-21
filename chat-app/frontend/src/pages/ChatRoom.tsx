@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import React, { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 
@@ -23,6 +23,9 @@ const ChatRoom = () => {
   const [inputText, setInputText] = useState<string>("");
   const [editingMessage, setEditingMessage] =
     useState<EditingMessageType | null>(null);
+  const [typingUser, setTypingUser] = useState<string>("");
+  const typingTimeoutRef = useRef<number | null>(null);
+  const [showFullText, setShowFullText] = useState<boolean>(true);
 
   const rooms = ["general", "tech", "other"];
 
@@ -91,6 +94,30 @@ const ChatRoom = () => {
     };
   }, [socket]);
 
+  // Event listener on typing message
+  useEffect(() => {
+    socket?.on("typing", (data: { userName: string; isTyping: boolean }) => {
+      if (data.isTyping) setTypingUser(data.userName);
+      else setTypingUser("");
+    });
+
+    return () => {
+      socket?.off("typing");
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (!typingUser) return;
+
+    const toggleInterval = setInterval(() => {
+      setShowFullText((prev) => !prev);
+    }, 1500);
+
+    return () => {
+      clearInterval(toggleInterval);
+    };
+  }, [typingUser]);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
@@ -114,6 +141,34 @@ const ChatRoom = () => {
   const handleCancelEdit = () => {
     setEditingMessage(null);
     setInputText("");
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const textValue = e.target.value;
+    setInputText(textValue);
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    if (!textValue.trim()) {
+      socket?.emit("user_typing", {
+        _id: user?._id,
+        room: activeRoom,
+        isTyping: false,
+      });
+    } else {
+      socket?.emit("user_typing", {
+        _id: user?._id,
+        room: activeRoom,
+        isTyping: true,
+      });
+      typingTimeoutRef.current = setTimeout(() => {
+        socket?.emit("user_typing", {
+          _id: user?._id,
+          room: activeRoom,
+          isTyping: false,
+        });
+      }, 4000);
+    }
   };
 
   return (
@@ -256,6 +311,20 @@ const ChatRoom = () => {
               );
             })
           )}
+          {typingUser && (
+            <div className="flex items-center gap-1 text-xs text-indigo-400 italic px-2 py-1">
+              <span>{showFullText ? `${typingUser} is typing` : "Typing"}</span>
+              <span className="inline-flex gap-0.5 font-bold not-italic">
+                <span className="inline-block animate-bounce">.</span>
+                <span className="inline-block animate-bounce [animation-delay:0.2s]">
+                  .
+                </span>
+                <span className="inline-block animate-bounce [animation-delay:0.4s]">
+                  .
+                </span>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Editing Banner Indicator */}
@@ -280,7 +349,7 @@ const ChatRoom = () => {
           <input
             type="text"
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={handleInputChange}
             placeholder={
               editingMessage ? "Edit message..." : `Message #${activeRoom}...`
             }

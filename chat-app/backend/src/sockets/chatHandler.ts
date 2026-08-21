@@ -116,5 +116,17 @@ export const registerChatHandlers = (io: Server) => {
         }
       },
     );
+
+    socket.on(
+      "user_typing",
+      async (data: { _id: string; room: string; isTyping: boolean }) => {
+        const { _id, room, isTyping } = data;
+        const user = await User.findById(_id);
+        const userName = user?.name || "Someone";
+
+        // Use socket which broadcasts to everyone except the sender
+        socket.to(room).emit("typing", { userName, isTyping });
+      },
+    );
   });
 };
