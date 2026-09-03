@@ -23,11 +23,13 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
+  const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
   useEffect(() => {
     if (!user) return;
 
     // Initialize socket connection
-    const socketInstance: Socket = io("/", {
+    const socketInstance: Socket = io(`${baseUrl}/`, {
       withCredentials: true,
     });
 

@@ -16,6 +16,7 @@ import { registerChatHandlers } from "./sockets/chatHandler";
 
 // 1. Initialize Express App & HTTP Server
 const app = express();
+app.set("trust proxy", 1); // Trust first proxy for secure cookies behind reverse proxy
 
 // Use HTTP Server, as app = express() is not a network server but just an Express request handler function
 const httpServer = http.createServer(app);
@@ -24,7 +25,7 @@ const port = process.env.PORT || 5000;
 // 2. Configure CORS
 app.use(
   cors({
-    origin: "http://localhost:5173", // Allows frontend URL to access cookies
+    origin: process.env.FRONTEND_URL || "http://localhost:5173", // Allows frontend URL to access cookies
     credentials: true, // Allow credentials (cookies) to be sent
   }),
 );
@@ -44,8 +45,8 @@ const sessionMiddleware = session({
   cookie: {
     maxAge: 1000 * 60 * 60 * 24, // 1 day, multiply 1000 as it is in milliseconds
     httpOnly: true, // Prevents client-side JS from reading the cookie
-    secure: false, // True if using HTTPS in production
-    sameSite: "lax", // Helps protect against CSRF attacks
+    secure: true, // True if using HTTPS in production
+    sameSite: "none",
   },
 });
 app.use(sessionMiddleware); // Attaches session processing to Express HTTP requests
@@ -53,7 +54,7 @@ app.use(sessionMiddleware); // Attaches session processing to Express HTTP reque
 // 4. Configure Socket.io Server & Handshake Guards
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
   },
 });

@@ -31,11 +31,13 @@ const ChatRoom = () => {
 
   const rooms = ["general", "tech", "other"];
 
+  const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
   // Fetch all messages belonging to activeRoom
   useEffect(() => {
     const getMessages = async () => {
       try {
-        const response = await fetch(`/api/messages/${activeRoom}`, {
+        const response = await fetch(`${baseUrl}/api/messages/${activeRoom}`, {
           credentials: "include",
         });
         const data = await response.json();
