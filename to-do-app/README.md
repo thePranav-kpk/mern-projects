@@ -14,6 +14,7 @@ A modern, responsive Todo application built using the MERN stack (MongoDB, Expre
 *   **Backend**: Node.js, Express.js (Router, middleware architectures)
 *   **Database**: MongoDB Atlas, Mongoose ODM
 *   **Utilities**: `http-status-codes`, `dotenv`, `cors`, `nodemon`
+*   **Containerization**: Docker (multi-stage build — Vite build → Node.js serve)
 
 ---
 
@@ -40,14 +41,46 @@ to-do-app/
 │   │   └── main.jsx
 │   ├── package.json          # Vite React scripts & configurations
 │   └── vite.config.js        # Vite build tool config with dev server proxy
+├── Dockerfile                # Multi-stage Docker build
+├── .dockerignore             # Excludes node_modules, dist, .env from build context
 └── README.md                 # Project documentation
 ```
 
 ---
 
-## 🛠️ Installation & Local Setup
+## 🐳 Running with Docker (Recommended)
 
-Follow these steps to run both the frontend and backend servers simultaneously on your machine.
+This is the recommended way to run the application locally. Docker builds the frontend, bundles it into the backend image, and runs everything as a single container — no need to manage two separate servers.
+
+### Prerequisites
+Make sure you have [Docker](https://docs.docker.com/get-docker/) installed and a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) connection string ready.
+
+### 1. Build the Docker Image
+From the `to-do-app/` directory:
+```bash
+docker build -t todo-app .
+```
+Docker will:
+- Install frontend dependencies and run `vite build`
+- Install backend production dependencies (no devDependencies)
+- Copy the compiled React assets into the backend image
+- Produce a lean, production-ready image
+
+### 2. Run the Container
+```bash
+docker run -p 5000:5000 \
+  -e MONGO_URI="mongodb+srv://<username>:<password>@<cluster-url>/<db-name>?retryWrites=true&w=majority" \
+  todo-app
+```
+Open your browser and navigate to `http://localhost:5000`.
+
+> **Note**: The `-e` flag injects environment variables at runtime. Never bake secrets into the image itself.
+
+---
+
+## 🛠️ Installation & Local Setup (Without Docker)
+
+Follow these steps if you prefer running the frontend and backend servers separately in development mode.
 
 ### Prerequisites
 Make sure you have [Node.js](https://nodejs.org/) installed and a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) database set up.
@@ -76,12 +109,6 @@ Make sure you have [Node.js](https://nodejs.org/) installed and a [MongoDB Atlas
    ```bash
    npm install
    ```
-
----
-
-## ⚡ Running the Application
-
-For the application to function, **both servers must run at the same time.**
 
 ### Start the Backend
 In the `backend/` directory terminal, run:
@@ -159,7 +186,12 @@ Catches Mongoose schema validation constraints (like submitting an empty title o
 *   `CastError` → Returns status `400 Bad Request` with query error details.
 *   `CustomAPIError` → Returns status `404 Not Found` with specific message.
 
-### 3. Vite Development Proxy
+### 3. Multi-Stage Docker Build
+The Dockerfile uses two stages to keep the final image lean:
+- **Stage 1 (`base`)**: Uses a full Node image to install frontend dependencies and run `vite build`, producing the compiled `dist/` assets.
+- **Stage 2 (`final`)**: Starts from a clean Node image, installs only backend production dependencies (`--omit=dev`), and copies the built frontend assets from Stage 1. The result is a single image with no frontend tooling, no devDependencies, and no source code — only what's needed to run.
+
+### 4. Vite Development Proxy
 All API fetch requests on the client are defined as relative paths `/api/v1/todos`. This is enabled via `vite.config.js`:
 ```javascript
 server: {
