@@ -1,0 +1,18 @@
+# Dependencies - Docker installs fresh, don't copy
+node_modules
+frontend/node_modules
+backend/node_modules
+
+# Build outputs - Docker builds these fresh inside the container
+frontend/dist
+backend/dist
+
+# Dev tooling
+.env
+.env.*
+*.log
+.DS_Store
+
+# Git
+.git
+.gitignore

@@ -12,6 +12,7 @@ A full-stack TypeScript URL shortener and click analytics web application built 
 *   **Frontend**: React 19, TypeScript (`.tsx`), JavaScript, Vanilla CSS (Variables, Glassmorphism, Responsive Layouts), `qrcode.react`, `lucide-react`
 *   **Backend**: Node.js, Express 5, TypeScript (`.ts`), `ts-node-dev`, `nanoid@3`, `http-status-codes`, `dotenv`, `cors`
 *   **Database**: MongoDB Atlas, Mongoose ODM with TypeScript Interface definitions (`IUrl`)
+*   **Containerization**: Docker (3-stage build — Vite build → TypeScript compile → Node.js serve)
 
 ---
 
@@ -39,14 +40,45 @@ url-shortener/
 │   ├── tsconfig.json        # Frontend TypeScript compiler configuration
 │   ├── package.json         # Vite React TS scripts & dependencies
 │   └── vite.config.ts       # Vite build tool config with dev server proxies
+├── Dockerfile               # 3-stage Docker build
+├── .dockerignore            # Excludes node_modules, dist, .env from build context
 └── README.md                # Project documentation
 ```
 
 ---
 
-## 🛠️ Installation & Local Setup
+## 🐳 Running with Docker (Recommended)
 
-Follow these steps to run both the frontend and backend TypeScript servers simultaneously on your machine.
+This is the recommended way to run the application locally. Docker compiles the TypeScript backend, builds the React frontend, and runs everything as a single container.
+
+### Prerequisites
+Make sure you have [Docker](https://docs.docker.com/get-docker/) installed and a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) connection string ready.
+
+### 1. Build the Docker Image
+From the `url-shortener/` directory:
+```bash
+docker build -t url-shortener .
+```
+Docker will:
+- **Stage 1**: Install frontend dependencies and run `vite build`
+- **Stage 2**: Install all backend dependencies (including TypeScript) and run `tsc` to compile `src/` → `dist/`
+- **Stage 3**: Fresh install of production-only dependencies, copy compiled `dist/` and React assets — no TypeScript compiler, no source files, no devDependencies in the final image
+
+### 2. Run the Container
+```bash
+docker run -p 5000:5000 \
+  -e MONGO_URI="mongodb+srv://<username>:<password>@<cluster-url>/url_shortener_db?retryWrites=true&w=majority" \
+  url-shortener
+```
+Open your browser and navigate to `http://localhost:5000`.
+
+> **Note**: The `-e` flag injects environment variables at runtime. Never bake secrets into the image itself.
+
+---
+
+## 🛠️ Installation & Local Setup (Without Docker)
+
+Follow these steps if you prefer running the frontend and backend TypeScript servers separately in development mode.
 
 ### Prerequisites
 Make sure you have [Node.js](https://nodejs.org/) installed and a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) database set up.
@@ -75,12 +107,6 @@ Make sure you have [Node.js](https://nodejs.org/) installed and a [MongoDB Atlas
    ```bash
    npm install
    ```
-
----
-
-## ⚡ Running the Application Locally (Development)
-
-To run the application locally in development mode:
 
 ### Start the Backend
 In the `backend/` directory terminal, run:
@@ -116,7 +142,13 @@ Open your browser and navigate to `http://localhost:5173`. The Vite proxy will r
 
 ## 🛠️ Advanced Architectures Implemented
 
-### 1. Full-Stack TypeScript Interface Typing (`IUrl` & `URLData`)
+### 1. 3-Stage Docker Build (TypeScript)
+TypeScript introduces a compile step that plain JavaScript apps don't need. The Dockerfile uses 3 stages to keep the final image lean and secure:
+- **Stage 1 (`base`)**: Builds the React frontend with Vite — produces `frontend/dist/`
+- **Stage 2 (`final`)**: Installs **all** backend dependencies (including `tsc` from devDependencies) and compiles TypeScript `src/` → `dist/`
+- **Stage 3 (`run`)**: Starts clean — copies only the compiled `dist/` from Stage 2 and the frontend assets from Stage 1, then does a fresh `npm install --omit=dev`. The final image contains no TypeScript source, no compiler, and no devDependencies.
+
+### 2. Full-Stack TypeScript Interface Typing (`IUrl` & `URLData`)
 Every database model, API payload, and React component prop is typed at compile-time:
 ```typescript
 export interface IUrl extends Document {
@@ -130,7 +162,7 @@ export interface IUrl extends Document {
 }
 ```
 
-### 2. Atomic MongoDB Counter Increment (`$inc` & `$set`)
+### 3. Atomic MongoDB Counter Increment (`$inc` & `$set`)
 To eliminate race condition bugs when multiple users click a short link simultaneously, click counts and timestamps are updated atomically in the database engine:
 ```typescript
 const url = await Url.findOneAndUpdate(
@@ -140,11 +172,11 @@ const url = await Url.findOneAndUpdate(
 );
 ```
 
-### 3. HTTP 302 Redirection Engine (`res.redirect`)
+### 4. HTTP 302 Redirection Engine (`res.redirect`)
 The server returns a standard HTTP 302 Found response, instructing browsers to forward immediately to the destination site:
 ```typescript
 res.redirect(url.originalUrl);
 ```
 
-### 4. Dynamic Vector QR Code Generation (`qrcode.react`)
+### 5. Dynamic Vector QR Code Generation (`qrcode.react`)
 Short links automatically generate scalable SVG QR codes in real-time, allowing users to scan links directly from desktop to mobile devices.
