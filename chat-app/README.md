@@ -12,7 +12,8 @@ A full-stack real-time chat application built using Node.js, Express 5, React 19
 *   **Frontend**: React 19, TypeScript (`.tsx`), Tailwind CSS v4, React Router Dom v7, `socket.io-client`, `lucide-react`
 *   **Backend**: Node.js, Express 5, TypeScript (`.ts`), `tsx` (dev), `socket.io`, `express-session`, `connect-mongo`, `bcryptjs`, `cors`
 *   **Database**: MongoDB Atlas, Mongoose ODM with TypeScript Interface definitions
-*   **Auth**: Session-based authentication (cookie + MongoStore), `bcryptjs` password hashing
+*   **Authentication**: Session-based authentication (`express-session` + `connect-mongo` store), `bcryptjs` password hashing
+*   **Containerization**: Docker Compose (Multi-stage TypeScript Backend + Nginx Frontend with WebSocket Reverse Proxy)
 *   **Deployment**: Frontend → Vercel, Backend → Render
 
 ---
@@ -25,12 +26,13 @@ chat-app/
 │   ├── src/
 │   │   ├── config/          # db.ts (Mongoose connection helper)
 │   │   ├── controllers/     # auth.ts (register/login/logout/me), message.ts (fetch by room)
-│   │   ├── middleware/      # socketAuth.ts (session wrapper + handshake guard)
+│   │   ├── middleware/      # auth.ts (protect), socketAuth.ts (session wrapper + handshake guard)
 │   │   ├── models/          # User.ts, Message.ts (Mongoose schemas + TS interfaces)
 │   │   ├── routes/          # auth.ts, message.ts (Express route mappings)
 │   │   ├── sockets/         # chatHandler.ts (join_room, send/edit/delete/typing events)
 │   │   ├── types/           # TypeScript type declarations
 │   │   └── server.ts        # Express + HTTP Server + Socket.io entry point
+│   ├── Dockerfile           # 2-Stage Multi-Stage TypeScript build (Node 20 Alpine)
 │   ├── tsconfig.json        # TypeScript compiler configuration (module: Node16)
 │   └── package.json         # Node scripts & TS dependencies
 ├── frontend/
@@ -41,18 +43,77 @@ chat-app/
 │   │   ├── App.tsx          # React Router tree & Context providers
 │   │   ├── index.css        # Tailwind v4 import & global resets
 │   │   └── main.tsx
+│   ├── Dockerfile           # Multi-stage: Vite TS build → Nginx serve
+│   ├── nginx.conf           # Nginx config: SPA routing, /api proxy, /socket.io WebSocket upgrade
 │   ├── vercel.json          # SPA rewrite rule for React Router
 │   ├── tsconfig.json        # Frontend TypeScript compiler configuration
 │   ├── package.json         # Vite React TS scripts & dependencies
 │   └── vite.config.ts       # Vite config with dev proxy (/api, /socket.io → port 5000)
+├── docker-compose.yml       # Orchestrates backend + Nginx frontend containers
+├── .dockerignore            # Excludes node_modules, dist, .env from build context
 └── README.md                # Project documentation
 ```
 
 ---
 
-## 🛠️ Installation & Local Setup
+## 🐳 Running with Docker Compose (Recommended)
 
-Follow these steps to run both the frontend and backend TypeScript servers simultaneously on your machine.
+This is the recommended way to run the application. Docker Compose spins up two isolated containers — the TypeScript Express API / Socket.io backend and an Nginx frontend reverse proxy — connected over an internal network.
+
+### Architecture
+```text
+Browser → Nginx (port 80)
+           ├── /              → serves React SPA (index.html + assets)
+           ├── /api/*         → reverse proxied to Express backend (port 5000)
+           └── /socket.io/*   → WebSocket HTTP upgrade & bidirectional stream to backend (port 5000)
+```
+
+### Prerequisites
+Make sure you have [Docker](https://docs.docker.com/get-docker/) installed and a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) connection string ready.
+
+### 1. Create a `.env` file
+Create a `.env` file in the `chat-app/` directory (same level as `docker-compose.yml`):
+```env
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/chat_db?retryWrites=true&w=majority
+SESSION_SECRET=your_super_secret_session_key
+```
+> This file is excluded from both Git and the Docker build context by `.dockerignore`.
+
+### 2. Build and Start
+```bash
+docker compose up --build
+```
+Docker will:
+1. Build the backend container (installs full dependencies, compiles TypeScript via `tsc`, then produces a minimal runtime image with only production dependencies).
+2. Build the frontend container (compiles TypeScript React app via Vite, then copies static assets into an Nginx Alpine image).
+3. Connect both containers on an internal network (`chat-app-network`) and forward incoming HTTP and WebSocket traffic.
+
+Open your browser and navigate to `http://localhost`.
+
+### 3. Stop the Containers
+```bash
+docker compose down
+```
+
+---
+
+## 🐳 Pull from Docker Hub
+
+Pre-built images are available on Docker Hub — no local build required:
+```bash
+docker pull pranav1306/mern-projects:chat-app-backend
+docker pull pranav1306/mern-projects:chat-app-frontend
+```
+Then run with Compose (uses `image:` tags from `docker-compose.yml` to pull automatically):
+```bash
+docker compose up
+```
+
+---
+
+## 🛠️ Installation & Local Setup (Without Docker)
+
+Follow these steps if you prefer running the frontend and backend TypeScript servers separately in development mode.
 
 ### Prerequisites
 Make sure you have [Node.js](https://nodejs.org/) installed and a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) database set up.
@@ -66,7 +127,7 @@ Make sure you have [Node.js](https://nodejs.org/) installed and a [MongoDB Atlas
    ```bash
    npm install
    ```
-3. Create a `.env` file in the `backend` directory and add your configurations:
+3. Create a `.env` file in the `backend` directory:
    ```env
    PORT=5000
    MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/chat_db?retryWrites=true&w=majority
@@ -83,7 +144,7 @@ Make sure you have [Node.js](https://nodejs.org/) installed and a [MongoDB Atlas
    ```bash
    npm install
    ```
-3. Create a `.env` file in the `frontend` directory and add:
+3. Create a `.env` file in the `frontend` directory:
    ```env
    VITE_BACKEND_URL=http://localhost:5000
    ```
@@ -150,7 +211,20 @@ Open your browser and navigate to `http://localhost:5173`. The Vite proxy forwar
 
 ## 🛠️ Advanced Architectures Implemented
 
-### 1. Session Shared Between HTTP & WebSocket (`wrapSession`)
+### 1. Nginx WebSocket Reverse Proxying (`Upgrade` & `Connection` Headers)
+Socket.io uses HTTP Long Polling initially and then upgrades the TCP connection to a bidirectional WebSocket stream. Nginx is configured to pass the upgrade handshake seamlessly through to the Express container:
+```nginx
+location /socket.io/ {
+    proxy_pass         http://backend:5000;
+    proxy_http_version 1.1;
+    proxy_set_header   Upgrade $http_upgrade;
+    proxy_set_header   Connection "upgrade";
+    proxy_set_header   Host $host;
+    proxy_set_header   X-Real-IP $remote_addr;
+}
+```
+
+### 2. Session Shared Between HTTP & WebSocket (`wrapSession`)
 Express sessions live in HTTP middleware. Socket.io handshakes are not HTTP requests, so the session is unavailable by default. A `wrapSession` adapter wraps the Express session middleware into a Promise that Socket.io's `io.use()` can call during the WebSocket handshake:
 ```typescript
 export const wrapSession = (middleware: RequestHandler) =>
@@ -159,11 +233,11 @@ export const wrapSession = (middleware: RequestHandler) =>
   };
 ```
 
-### 2. Cross-Origin Cookie Negotiation (`sameSite: "none"` + `secure: true`)
+### 3. Cross-Origin Cookie Negotiation (`sameSite: "none"` + `secure: true`)
 When the frontend (Vercel) and backend (Render) are on different domains, browsers block cookies by default. The session cookie is configured with `sameSite: "none"` (allows cross-site sending) paired with `secure: true` (HTTPS only — required by the browser when `sameSite: "none"` is set). `app.set("trust proxy", 1)` tells Express to trust Render's HTTPS reverse proxy headers.
 
-### 3. Soft-Delete Message Pattern
+### 4. Soft-Delete Message Pattern
 Messages are never hard-deleted from the database. Instead, an `isDeleted: true` flag is set and the content is cleared. The frontend renders deleted messages as greyed-out italic placeholders, preserving conversation thread integrity while removing the content.
 
-### 4. Typing Indicator with Auto-Clear Timeout
+### 5. Typing Indicator with Auto-Clear Timeout
 A debounced typing event system emits `user_typing` on each keystroke and auto-clears after 4 seconds of inactivity via a `setTimeout` ref — preventing stale "is typing" states if a user stops typing without pressing Enter.

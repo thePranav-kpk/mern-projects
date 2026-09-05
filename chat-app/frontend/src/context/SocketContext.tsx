@@ -54,7 +54,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       setSocket(null);
       setIsConnected(false);
     };
-  }, [user]);
+  }, [baseUrl, user]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>

@@ -51,7 +51,7 @@ const ChatRoom = () => {
 
     getMessages();
     socket?.emit("join_room", activeRoom);
-  }, [activeRoom, socket]);
+  }, [activeRoom, socket, baseUrl]);
 
   // Event listener on receiving message
   useEffect(() => {
@@ -191,19 +191,29 @@ const ChatRoom = () => {
 
   return (
     <div className="flex h-screen bg-slate-950 text-white font-sans overflow-hidden">
-
       {/* ── Sidebar ─────────────────────────────────────────────── */}
       <aside className="w-64 shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col">
-
         {/* Brand header */}
         <div className="px-5 pt-5 pb-4 border-b border-slate-800/60">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-md shadow-indigo-500/30">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              <svg
+                className="w-4 h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
               </svg>
             </div>
-            <span className="text-base font-bold text-white tracking-tight">RealChat</span>
+            <span className="text-base font-bold text-white tracking-tight">
+              RealChat
+            </span>
           </div>
         </div>
 
@@ -225,7 +235,11 @@ const ChatRoom = () => {
                       : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                   }`}
                 >
-                  <span className={`text-base leading-none ${isActive ? "text-indigo-200" : "text-slate-600"}`}>#</span>
+                  <span
+                    className={`text-base leading-none ${isActive ? "text-indigo-200" : "text-slate-600"}`}
+                  >
+                    #
+                  </span>
                   {room}
                 </button>
               );
@@ -251,7 +265,9 @@ const ChatRoom = () => {
                     {onlineUser.name}
                   </span>
                   {onlineUser._id === user?._id && (
-                    <span className="ml-auto text-[10px] text-slate-600 font-mono shrink-0">you</span>
+                    <span className="ml-auto text-[10px] text-slate-600 font-mono shrink-0">
+                      you
+                    </span>
                   )}
                 </li>
               ))}
@@ -265,7 +281,9 @@ const ChatRoom = () => {
             {user?.name?.charAt(0) ?? "?"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-white truncate">{user?.name}</p>
+            <p className="text-xs font-semibold text-white truncate">
+              {user?.name}
+            </p>
             <p className="text-[10px] text-slate-500 truncate">{user?.email}</p>
           </div>
           <button
@@ -273,8 +291,18 @@ const ChatRoom = () => {
             title="Logout"
             className="shrink-0 p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-400/10 transition-all duration-150"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
             </svg>
           </button>
         </div>
@@ -282,16 +310,23 @@ const ChatRoom = () => {
 
       {/* ── Main Chat Area ───────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 bg-slate-950">
-
         {/* Chat header */}
         <header className="shrink-0 h-14 px-5 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <span className="text-slate-500 font-bold text-lg leading-none">#</span>
-            <h1 className="text-sm font-semibold text-white uppercase tracking-wider">{activeRoom}</h1>
+            <span className="text-slate-500 font-bold text-lg leading-none">
+              #
+            </span>
+            <h1 className="text-sm font-semibold text-white uppercase tracking-wider">
+              {activeRoom}
+            </h1>
           </div>
           <div className="flex items-center gap-1.5 text-xs">
-            <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-400" : "bg-rose-500"}`}></span>
-            <span className={`font-medium ${isConnected ? "text-emerald-400" : "text-rose-400"}`}>
+            <span
+              className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-400" : "bg-rose-500"}`}
+            ></span>
+            <span
+              className={`font-medium ${isConnected ? "text-emerald-400" : "text-rose-400"}`}
+            >
               {isConnected ? "Connected" : "Disconnected"}
             </span>
           </div>
@@ -305,7 +340,11 @@ const ChatRoom = () => {
                 💬
               </div>
               <p className="text-slate-500 text-sm max-w-xs">
-                No messages yet in <span className="text-slate-400 font-medium">#{activeRoom}</span>. Be the first to say something!
+                No messages yet in{" "}
+                <span className="text-slate-400 font-medium">
+                  #{activeRoom}
+                </span>
+                . Be the first to say something!
               </p>
             </div>
           ) : (
@@ -332,7 +371,9 @@ const ChatRoom = () => {
                       })}
                     </span>
                     {message.isEdited && !message.isDeleted && (
-                      <span className="text-[10px] text-slate-600 italic">(edited)</span>
+                      <span className="text-[10px] text-slate-600 italic">
+                        (edited)
+                      </span>
                     )}
 
                     {/* Edit / Delete triggers */}
@@ -391,8 +432,12 @@ const ChatRoom = () => {
               <span>{showFullText ? `${typingUser} is typing` : "Typing"}</span>
               <span className="inline-flex gap-0.5 font-bold not-italic">
                 <span className="inline-block animate-bounce">.</span>
-                <span className="inline-block animate-bounce [animation-delay:0.15s]">.</span>
-                <span className="inline-block animate-bounce [animation-delay:0.3s]">.</span>
+                <span className="inline-block animate-bounce [animation-delay:0.15s]">
+                  .
+                </span>
+                <span className="inline-block animate-bounce [animation-delay:0.3s]">
+                  .
+                </span>
               </span>
             </div>
           )}
@@ -402,8 +447,18 @@ const ChatRoom = () => {
         {editingMessage && (
           <div className="shrink-0 px-5 py-2.5 bg-indigo-950/70 border-t border-indigo-800/40 flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs text-indigo-300">
-              <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              <svg
+                className="w-3.5 h-3.5 text-indigo-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
               </svg>
               <span>Editing message</span>
             </div>
@@ -427,7 +482,9 @@ const ChatRoom = () => {
             value={inputText}
             onChange={handleInputChange}
             placeholder={
-              editingMessage ? "Edit your message..." : `Message #${activeRoom}...`
+              editingMessage
+                ? "Edit your message..."
+                : `Message #${activeRoom}...`
             }
             className="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700/60 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200"
           />

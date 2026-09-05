@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     fetchMe();
-  }, []);
+  }, [baseUrl]);
 
   const register = async (name: string, email: string, password: string) => {
     try {
