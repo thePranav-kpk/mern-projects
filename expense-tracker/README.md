@@ -13,6 +13,7 @@ A multi-user financial tracking and analytics application built using the MERN s
 *   **Backend**: Node.js, Express 5 (MongoDB Aggregation Pipelines, RegExp routing, middleware architecture)
 *   **Database**: MongoDB Atlas, Mongoose ODM
 *   **Authentication**: JSON Web Tokens (JWT), `bcryptjs` password hashing
+*   **Containerization**: Docker Compose (separate backend + Nginx frontend containers)
 
 ---
 
@@ -28,6 +29,7 @@ expense-tracker/
 │   ├── models/               # User.js & Transaction.js (Enums, Min validators)
 │   ├── routes/               # Express auth & transactions route mappings
 │   ├── .env                  # Environment configurations (local only)
+│   ├── Dockerfile            # Backend-only Node.js container
 │   ├── package.json          # Node scripts & dependencies
 │   └── server.js             # Express entry point (serves compiled static frontend)
 ├── frontend/
@@ -38,16 +40,74 @@ expense-tracker/
 │   │   ├── App.jsx           # Main router tree & Context providers
 │   │   ├── index.css         # Dark glassmorphism layout & theme variables
 │   │   └── main.jsx
+│   ├── Dockerfile            # Multi-stage: Vite build → Nginx serve
+│   ├── nginx.conf            # Nginx config: SPA routing + /api reverse proxy to backend
 │   ├── package.json          # Vite React scripts & configurations
 │   └── vite.config.js        # Vite build tool config with dev server proxy
+├── docker-compose.yml        # Orchestrates backend + frontend containers
+├── .dockerignore             # Excludes node_modules, dist, .env from build context
 └── README.md                 # Project documentation
 ```
 
 ---
 
-## 🛠️ Installation & Local Setup
+## 🐳 Running with Docker Compose (Recommended)
 
-Follow these steps to run both the frontend and backend servers simultaneously on your machine.
+This is the recommended way to run the application. Docker Compose spins up two isolated containers — the Express API backend and an Nginx frontend — connected over an internal network.
+
+### Architecture
+```
+Browser → Nginx (port 80)
+           ├── /          → serves React SPA (index.html + assets)
+           └── /api/*     → reverse proxied to Express backend (port 5000)
+```
+
+### Prerequisites
+Make sure you have [Docker](https://docs.docker.com/get-docker/) installed and a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) connection string ready.
+
+### 1. Create a `.env` file
+Create a `.env` file in the `expense-tracker/` directory (same level as `docker-compose.yml`):
+```env
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/expense_db?retryWrites=true&w=majority
+JWT_SECRET=yoursupersecurejwtsecretkey
+```
+> This file is excluded from both Git and the Docker build context by `.dockerignore`.
+
+### 2. Build and Start
+```bash
+docker compose up --build
+```
+Docker will:
+- Build the backend Node.js image
+- Build the frontend (Vite → compile React, then Nginx serves the output)
+- Connect both on an isolated internal network
+
+Open your browser and navigate to `http://localhost`.
+
+### 3. Stop the Containers
+```bash
+docker compose down
+```
+
+---
+
+## 🐳 Pull from Docker Hub
+
+Pre-built images are available on Docker Hub — no local build required:
+```bash
+docker pull pranav1306/mern-projects:expense-tracker-backend
+docker pull pranav1306/mern-projects:expense-tracker-frontend
+```
+Then run with Compose (uses `image:` tags from `docker-compose.yml` to pull automatically):
+```bash
+docker compose up
+```
+
+---
+
+## 🛠️ Installation & Local Setup (Without Docker)
+
+Follow these steps if you prefer running the frontend and backend servers separately in development mode.
 
 ### Prerequisites
 Make sure you have [Node.js](https://nodejs.org/) installed and a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) database set up.
@@ -77,12 +137,6 @@ Make sure you have [Node.js](https://nodejs.org/) installed and a [MongoDB Atlas
    ```bash
    npm install
    ```
-
----
-
-## ⚡ Running the Application Locally (Development)
-
-To run the application locally in development mode:
 
 ### Start the Backend
 In the `backend/` directory terminal, run:
@@ -129,7 +183,15 @@ Open your browser and navigate to `http://localhost:5173`. The Vite proxy will r
 
 ## 🛠️ Advanced Architectures Implemented
 
-### 1. MongoDB Aggregation Pipelines (`$match`, `$group`, `$sort`, `$project`)
+### 1. Multi-Container Docker Compose Architecture
+Instead of bundling the frontend into the backend image, this app uses Docker Compose to run two isolated containers:
+- **Backend container**: Pure Express API — no static file serving, no frontend tooling
+- **Frontend container**: Nginx serves the compiled React SPA and acts as a **reverse proxy**, forwarding all `/api/*` requests to the backend container over Docker's internal network. The browser only ever talks to port 80 — it never directly hits port 5000.
+
+### 2. Nginx as Reverse Proxy (no CORS needed)
+Since Nginx forwards `/api/` requests to the backend on the same Docker network, **both frontend and backend appear to be on the same origin** from the browser's perspective. This eliminates CORS entirely for the containerized deployment.
+
+### 3. MongoDB Aggregation Pipelines (`$match`, `$group`, `$sort`, `$project`)
 Rather than computing financial totals using JavaScript loops in Node, the application offloads heavy financial math directly to MongoDB's native C++ aggregation engine.
 ```javascript
 const stats = await Transaction.aggregate([
@@ -158,7 +220,7 @@ const stats = await Transaction.aggregate([
 ]);
 ```
 
-### 2. React `useReducer` + `Promise.all` State Synchronization
+### 4. React `useReducer` + `Promise.all` State Synchronization
 All financial states (`transactions`, `summary`, `breakdown`) are managed atomically via a central `expenseReducer`. Data loading occurs concurrently using `Promise.all`:
 ```javascript
 const [txRes, sumRes, catRes] = await Promise.all([
@@ -168,7 +230,7 @@ const [txRes, sumRes, catRes] = await Promise.all([
 ]);
 ```
 
-### 3. Strict Schema Validation (`enum` & `min`)
+### 5. Strict Schema Validation (`enum` & `min`)
 Mongoose enforces strict type rules and value boundaries before saving entries to the database:
 ```javascript
 type: {

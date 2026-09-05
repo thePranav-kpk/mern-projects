@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    image: pranav1306/mern-projects:expense-tracker-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - expense-tracker-network
+
+  backend:
+    build:
+      context: ./backend
+    image: pranav1306/mern-projects:expense-tracker-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - expense-tracker-network
+
+networks:
+  expense-tracker-network:
