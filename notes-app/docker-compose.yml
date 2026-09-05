@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    image: pranav1306/mern-projects:notes-app-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - notes-app-network
+
+  backend:
+    build:
+      context: ./backend
+    image: pranav1306/mern-projects:notes-app-backend
+    ports:
+      - "5000:5000"
+    networks:
+      - notes-app-network
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+
+networks:
+  notes-app-network:

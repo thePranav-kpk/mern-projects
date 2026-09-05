@@ -13,6 +13,7 @@ A secure, multi-user Notes application built using the MERN stack (MongoDB, Expr
 *   **Backend**: Node.js, Express 5 (RegExp routing, custom middlewares)
 *   **Database**: MongoDB Atlas, Mongoose ODM
 *   **Authentication**: JSON Web Tokens (JWT), `bcryptjs` password hashing
+*   **Containerization**: Docker Compose (separate backend + Nginx frontend containers)
 
 ---
 
@@ -28,10 +29,10 @@ notes-app/
 │   ├── models/               # User.js (User schema) & Note.js (Note schema)
 │   ├── routes/               # Express auth & notes route mappings
 │   ├── .env                  # Environment configurations (local only)
+│   ├── Dockerfile            # Backend-only Node.js container
 │   ├── package.json          # Node scripts & dependencies
 │   └── server.js             # Express application entry point (serves compiled static frontend)
 ├── frontend/
-│   ├── dist/                 # Compiled production assets (ignored by Git)
 │   ├── src/
 │   │   ├── components/       # ProtectedRoute, Navbar, NoteCard, AddEditNoteModal
 │   │   ├── context/          # AuthContext (global state, auto-login, logout)
@@ -40,16 +41,74 @@ notes-app/
 │   │   ├── App.jsx           # Main routing tree
 │   │   ├── index.css         # Custom dark glassmorphic variables and layouts
 │   │   └── main.jsx
+│   ├── Dockerfile            # Multi-stage: Vite build → Nginx serve
+│   ├── nginx.conf            # Nginx config: SPA routing + /api reverse proxy to backend
 │   ├── package.json          # Vite React scripts & configurations
 │   └── vite.config.js        # Vite build tool config with dev server proxy
+├── docker-compose.yml        # Orchestrates backend + frontend containers
+├── .dockerignore             # Excludes node_modules, dist, .env from build context
 └── README.md                 # Project documentation
 ```
 
 ---
 
-## 🛠️ Installation & Local Setup
+## 🐳 Running with Docker Compose (Recommended)
 
-Follow these steps to run both the frontend and backend servers simultaneously on your machine.
+This is the recommended way to run the application. Docker Compose spins up two isolated containers — the Express API backend and an Nginx frontend — connected over an internal network.
+
+### Architecture
+```
+Browser → Nginx (port 80)
+           ├── /          → serves React SPA (index.html + assets)
+           └── /api/*     → reverse proxied to Express backend (port 5000)
+```
+
+### Prerequisites
+Make sure you have [Docker](https://docs.docker.com/get-docker/) installed and a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) connection string ready.
+
+### 1. Create a `.env` file
+Create a `.env` file in the `notes-app/` directory (same level as `docker-compose.yml`):
+```env
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster-url>/notes_db?retryWrites=true&w=majority
+JWT_SECRET=yoursupersecurejwtsecretkey
+```
+> This file is excluded from both Git and the Docker build context by `.dockerignore`.
+
+### 2. Build and Start
+```bash
+docker compose up --build
+```
+Docker will:
+- Build the backend Node.js image
+- Build the frontend (Vite → compile React, then Nginx serves the output)
+- Connect both on an isolated internal network
+
+Open your browser and navigate to `http://localhost`.
+
+### 3. Stop the Containers
+```bash
+docker compose down
+```
+
+---
+
+## 🐳 Pull from Docker Hub
+
+Pre-built images are available on Docker Hub — no local build required:
+```bash
+docker pull pranav1306/mern-projects:notes-app-backend
+docker pull pranav1306/mern-projects:notes-app-frontend
+```
+Then run with Compose (uses `image:` tags from `docker-compose.yml` to pull automatically):
+```bash
+docker compose up
+```
+
+---
+
+## 🛠️ Installation & Local Setup (Without Docker)
+
+Follow these steps if you prefer running the frontend and backend servers separately in development mode.
 
 ### Prerequisites
 Make sure you have [Node.js](https://nodejs.org/) installed and a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) database set up.
@@ -79,12 +138,6 @@ Make sure you have [Node.js](https://nodejs.org/) installed and a [MongoDB Atlas
    ```bash
    npm install
    ```
-
----
-
-## ⚡ Running the Application Locally (Development)
-
-To run the application locally in development mode:
 
 ### Start the Backend
 In the `backend/` directory terminal, run:
@@ -129,7 +182,15 @@ Open your browser and navigate to `http://localhost:5173`. The Vite proxy will r
 
 ## 🛠️ Advanced Architectures Implemented
 
-### 1. Multi-Tenant Database Isolation
+### 1. Multi-Container Docker Compose Architecture
+Instead of bundling the frontend into the backend image, this app uses Docker Compose to run two isolated containers:
+- **Backend container**: Pure Express API — no static file serving, no frontend tooling
+- **Frontend container**: Nginx serves the compiled React SPA and acts as a **reverse proxy**, forwarding all `/api/*` requests to the backend container over Docker's internal network. The browser only ever talks to port 80 — it never directly hits port 5000.
+
+### 2. Nginx as Reverse Proxy (no CORS needed)
+Since Nginx forwards `/api/` requests to the backend on the same Docker network, **both frontend and backend appear to be on the same origin** from the browser's perspective. This eliminates CORS entirely for the containerized deployment.
+
+### 3. Multi-Tenant Database Isolation
 To ensure strict separation of user data, every note includes a reference to its owner:
 ```javascript
 userId: {
@@ -140,7 +201,7 @@ userId: {
 ```
 All CRUD database actions filter by **both** the note `_id` and the verified JWT user ID (`req.user.userId`), preventing users from accessing or editing other users' notes.
 
-### 2. React 19 Key-Based Component Resetting
+### 4. React 19 Key-Based Component Resetting
 Rather than utilizing side effects (`useEffect`) inside the `AddEditNoteModal` to reset inputs (which triggers cascading renders), the component is mounted inside the Dashboard using a unique **`key` prop**:
 ```jsx
 <AddEditNoteModal
