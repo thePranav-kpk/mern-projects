@@ -26,17 +26,23 @@ url-shortener/
 │   │   ├── controllers/     # urlController.ts (shortenUrl, redirectUrl, getUrlStats)
 │   │   ├── models/          # Url.ts (IUrl TypeScript Interface + Mongoose B-Tree Schema)
 │   │   ├── routes/          # urlRoutes.ts (API route handlers)
-│   │   └── server.ts        # Express TypeScript entry point (serves compiled static frontend)
+│   │   └── server.ts        # Express TypeScript entry point (with /api/health endpoint)
 │   ├── dist/                # Compiled JavaScript production build output (ignored by Git)
+│   ├── .env.example         # Template for environment variables
+│   ├── .gitignore           # Excludes node_modules, dist, .env
+│   ├── render.yaml          # Render Infrastructure-as-Code Blueprint
 │   ├── tsconfig.json        # TypeScript compiler configuration
 │   └── package.json         # Node scripts & TS dependencies
 ├── frontend/
 │   ├── src/
 │   │   ├── components/      # UrlForm.tsx, UrlCard.tsx (Props Interfaces, Lucide icons, QR Code SVG)
 │   │   ├── types/           # api.types.ts (URLData Interface definition)
+│   │   ├── config.ts        # Centralized API base URL config (VITE_API_URL)
 │   │   ├── App.tsx          # Main layout container & URL state coordinator
 │   │   ├── index.css        # Glassmorphism dark-theme variables & typography
 │   │   └── main.tsx
+│   ├── .env.example         # Frontend environment variables template
+│   ├── vercel.json          # Vercel SPA rewrite rules
 │   ├── tsconfig.json        # Frontend TypeScript compiler configuration
 │   ├── package.json         # Vite React TS scripts & dependencies
 │   └── vite.config.ts       # Vite build tool config with dev server proxies
@@ -44,6 +50,82 @@ url-shortener/
 ├── .dockerignore            # Excludes node_modules, dist, .env from build context
 └── README.md                # Project documentation
 ```
+
+---
+
+## ☁️ Cloud Deployment (Render + Vercel)
+
+The application is architected for decoupled cloud deployment: the **Express TypeScript backend on Render** and the **React Vite TypeScript frontend on Vercel**.
+
+```
+┌─────────────────────────────────┐           ┌──────────────────────────────────┐
+│         Vercel Frontend         │  HTTPS    │          Render Backend          │
+│  (https://<app>.vercel.app)     │ ────────> │   (https://<api>.onrender.com)   │
+│  - React 19 + TypeScript SPA    │   REST    │   - Express 5 + TypeScript API   │
+│  - QR Code Vector Generation    │ Redirects │   - Atomic MongoDB Clicks ($inc) │
+│  - Config: VITE_API_URL         │           │   - Health: /api/health          │
+└─────────────────────────────────┘           └──────────────────────────────────┘
+                                                               ▲
+                                                               │ Ping every 10-14 min
+                                              ┌────────────────┴─────────────────┐
+                                              │    Keep-Alive Cron Job Monitor   │
+                                              │   (cron-job.org / GitHub Action) │
+                                              └──────────────────────────────────┘
+```
+
+### 1. Backend Deployment — Render
+
+1. Sign in to [Render](https://render.com/) and click **New +** → **Web Service**.
+2. Connect your GitHub repository (`mern-projects`).
+3. Set the following build configuration:
+   - **Name**: `url-shortener-api` *(or your custom name)*
+   - **Root Directory**: `url-shortener/backend`
+   - **Runtime**: `Node`
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `node dist/server.js`
+   - **Instance Type**: `Free`
+4. Expand **Advanced** and set the **Health Check Path** to `/api/health`.
+5. Under **Environment Variables**, add:
+   | Key | Value | Description |
+   | :--- | :--- | :--- |
+   | `MONGO_URI` | `mongodb+srv://pranav06:Pranav2006@todo.mq5j745.mongodb.net/url_db?retryWrites=true&w=majority` | MongoDB Atlas URI |
+   | `NODE_ENV` | `production` | Production environment flag |
+6. Click **Deploy Web Service**.
+7. Test the health check endpoint: `https://<your-service>.onrender.com/api/health`. It returns:
+   ```json
+   { "status": "ok", "service": "url-shortener-api", "timestamp": "..." }
+   ```
+
+*(Alternatively: Deploy using the included [`url-shortener/backend/render.yaml`](backend/render.yaml) Blueprint).*
+
+---
+
+### 2. Frontend Deployment — Vercel
+
+1. Sign in to [Vercel](https://vercel.com/) and click **Add New...** → **Project**.
+2. Import the `mern-projects` GitHub repository.
+3. Configure the build settings:
+   - **Project Name**: `url-shortener-frontend`
+   - **Framework Preset**: `Vite`
+   - **Root Directory**: Click **Edit** and select `url-shortener/frontend`
+4. Expand **Environment Variables** and add:
+   | Key | Value |
+   | :--- | :--- |
+   | `VITE_API_URL` | `https://<your-render-backend-url>.onrender.com` *(no trailing slash)* |
+5. Click **Deploy**.
+
+---
+
+### 3. Keep-Alive Cron Job (Prevents Free-Tier Sleep)
+
+1. Go to [cron-job.org](https://cron-job.org/) and sign in.
+2. Click **Create Cronjob**.
+3. **Title**: `URL Shortener Keep-Alive`
+4. **URL**: `https://<your-render-backend-url>.onrender.com/api/health`
+5. **Schedule**: Select **Every 10 minutes** (or **Every 14 minutes**).
+6. Click **Create**.
+
+---
 
 ---
 
@@ -134,6 +216,7 @@ Open your browser and navigate to `http://localhost:5173`. The Vite proxy will r
 
 | HTTP Method | Route Endpoint | Description | Payload / Request Format | Success Status |
 | :--- | :--- | :--- | :--- | :--- |
+| **GET** | `/api/health` | Health check & keep-alive monitor | *None* | `200 OK` |
 | **POST** | `/api/v1/urls/shorten` | Generate a 6-character short link | `{ "originalUrl": "https://example.com/very-long-link" }` | `201 Created` / `200 OK` |
 | **GET** | `/r/:shortCode` | HTTP 302 Redirect to destination URL + Atomic `$inc` | *Redirection request* | `302 Found` |
 | **GET** | `/api/v1/urls/stats/:shortCode` | Fetch click analytics for short link | *None* | `200 OK` |

@@ -1,6 +1,7 @@
 import React, { useState, type FormEvent } from "react";
 import { Link2 } from "lucide-react";
 import type { URLData } from "../types/api.types";
+import API_URL from "../config";
 
 interface UrlFormProps {
   onUrlShortened: (newUrl: URLData) => void;
@@ -20,7 +21,7 @@ const UrlForm: React.FC<UrlFormProps> = ({ onUrlShortened }) => {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/v1/urls/shorten", {
+      const response = await fetch(`${API_URL}/api/v1/urls/shorten`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

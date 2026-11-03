@@ -4,6 +4,7 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 import connectDB from "./config/db";
 import urlRoutes from "./routes/urlRoutes";
 import { redirectUrl } from "./controllers/urlController";
@@ -15,16 +16,47 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static assets from React build folder
-app.use(express.static(path.resolve(__dirname, "../../frontend/dist")));
+// Normalize multiple slashes to prevent 404s when trailing slashes exist in environment variables
+app.use((req, res, next) => {
+  req.url = req.url.replace(/\/{2,}/g, "/");
+  next();
+});
+
+// Health check endpoint (keeps Render free tier active & verifies uptime)
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "url-shortener-api",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Mount API Routers
 app.use("/api/v1/urls", urlRoutes);
 app.get("/r/:shortCode", redirectUrl);
 
-// Catch-all route for Single Page Application
-app.get(/^(.*)$/, (req, res) => {
-  res.sendFile(path.resolve(__dirname, "../../frontend/dist", "index.html"));
+// Serve static assets if frontend/dist exists (Docker / full-stack deployment)
+const frontendDist = path.resolve(__dirname, "../../frontend/dist");
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get(/^(.*)$/, (req, res, next) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/r/")) return next();
+    res.sendFile(path.resolve(frontendDist, "index.html"));
+  });
+} else {
+  // Standalone API mode (e.g. Render backend with separate Vercel frontend)
+  app.get("/", (req, res) => {
+    res.status(200).json({
+      status: "ok",
+      message: "TrimURL API is running",
+      health: "/api/health",
+    });
+  });
+}
+
+// 404 Fallback
+app.use((req, res) => {
+  res.status(404).json({ msg: "Route does not exist" });
 });
 
 const start = async (): Promise<void> => {

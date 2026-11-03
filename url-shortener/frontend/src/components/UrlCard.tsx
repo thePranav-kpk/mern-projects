@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Copy, Check, BarChart2, QrCode, ExternalLink } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { URLData } from "../types/api.types";
+import API_URL from "../config";
 
 interface UrlCardProps {
   url: URLData;
@@ -11,8 +12,9 @@ const UrlCard: React.FC<UrlCardProps> = ({ url }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const [showQr, setShowQr] = useState<boolean>(false);
 
-  // Construct full short link
-  const shortUrl = `${window.location.origin}/r/${url.shortCode}`;
+  // Construct full short link pointing to backend redirect endpoint
+  const baseShortUrl = API_URL || window.location.origin;
+  const shortUrl = `${baseShortUrl}/r/${url.shortCode}`;
 
   const handleCopy = async () => {
     try {
@@ -51,7 +53,7 @@ const UrlCard: React.FC<UrlCardProps> = ({ url }) => {
       >
         <div>
           <a
-            href={`/r/${url.shortCode}`}
+            href={shortUrl}
             target="_blank"
             rel="noopener noreferrer"
             style={{
