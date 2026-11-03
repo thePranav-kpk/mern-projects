@@ -23,7 +23,7 @@ const Dashboard = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({ msg: "Failed to load notes" }));
 
       if (response.ok) {
         setNotes(data.notes || []);

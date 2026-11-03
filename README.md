@@ -11,7 +11,7 @@ A collection of 5 production-grade full-stack web applications built using the *
 | **Expense Tracker** | [Live App](https://mern-projects-omega-ashen.vercel.app/login) | [API Service](https://expense-tracker-api-a6fu.onrender.com) | [`/api/health`](https://expense-tracker-api-a6fu.onrender.com/api/health) | 🟢 **Live** |
 | **To-Do App** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
 | **URL Shortener** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
-| **Notes App** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
+| **Notes App** | [Live App](https://mern-projects-r6en.vercel.app/login) | [API Service](https://notes-app-api-ylzn.onrender.com) | [`/api/health`](https://notes-app-api-ylzn.onrender.com/api/health) | 🟢 **Live** |
 | **Real-Time Chat App** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
 
 ---
@@ -55,6 +55,7 @@ Each project follows an enterprise decoupled cloud architecture:
 *   **Highlights**: Instant URL redirection with click-through analytics tracking and QR code download.
 
 ### 4. [Notes Workspace & Knowledge Base](./notes-app/README.md)
+*   **Live App**: [https://mern-projects-r6en.vercel.app](https://mern-projects-r6en.vercel.app)
 *   **Tech**: React, Express, MongoDB, JWT Auth, Docker Compose.
 *   **Highlights**: Rich Markdown formatting, tag categorization, secure user session management.
 

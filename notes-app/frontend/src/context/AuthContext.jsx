@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ email, password }),
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({ msg: "Invalid server response" }));
     if (!response.ok) {
       throw new Error(data.msg || "Login failed");
     }
@@ -67,9 +67,9 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ name, email, password }),
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({ msg: "Invalid server response" }));
     if (!response.ok) {
-      throw new Error(data.msg || "Registraton failed");
+      throw new Error(data.msg || "Registration failed");
     }
     localStorage.setItem("token", data.token);
     setUser(data.user);

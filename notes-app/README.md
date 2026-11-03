@@ -1,7 +1,9 @@
 # MERN Notes App (with JWT Authentication)
 
-*   **Live Application**: [https://notes-app-jkhe.onrender.com](https://notes-app-jkhe.onrender.com)
-*   **Live API Endpoint**: [https://notes-app-jkhe.onrender.com/api/v1/notes](https://notes-app-jkhe.onrender.com/api/v1/notes) (Requires Authentication)
+*   **Live Application (Vercel)**: [https://mern-projects-r6en.vercel.app](https://mern-projects-r6en.vercel.app)
+*   **Live API Backend (Render)**: [https://notes-app-api-ylzn.onrender.com](https://notes-app-api-ylzn.onrender.com)
+*   **Health Check Endpoint**: [https://notes-app-api-ylzn.onrender.com/api/health](https://notes-app-api-ylzn.onrender.com/api/health)
+*   **API Route**: `https://notes-app-api-ylzn.onrender.com/api/v1/notes` (Requires Bearer JWT)
 
 A secure, multi-user Notes application built using the MERN stack (MongoDB, Express 5, React 19, Node.js). This project implements password hashing, token-based session persistence, custom route guards, and a glassmorphism dark-theme dashboard with category tagging, color customizers, and pin-to-top sorting.
 
@@ -64,10 +66,11 @@ The application is architected for decoupled cloud deployment: the **Express API
 ```
 ┌─────────────────────────────────┐           ┌──────────────────────────────────┐
 │         Vercel Frontend         │  HTTPS    │          Render Backend          │
-│  (https://<app>.vercel.app)     │ ────────> │   (https://<api>.onrender.com)   │
-│  - React 19 + Vite SPA          │  REST/JWT │   - Express 5 REST API           │
-│  - vercel.json SPA rewrites     │           │   - MongoDB Atlas Multi-Tenant   │
-│  - Config: VITE_API_URL         │           │   - Health: /api/health          │
+│ https://mern-projects-r6en.     │ ────────> │ https://notes-app-api-ylzn.      │
+│ vercel.app                      │  REST/JWT │ onrender.com                     │
+│ - React 19 + Vite SPA           │           │ - Express 5 REST API             │
+│ - vercel.json SPA rewrites      │           │ - MongoDB Atlas Multi-Tenant     │
+│ - Config: VITE_API_URL          │           │ - Health: /api/health            │
 └─────────────────────────────────┘           └──────────────────────────────────┘
                                                                ▲
                                                                │ Ping every 10-14 min
@@ -127,7 +130,7 @@ The application is architected for decoupled cloud deployment: the **Express API
 1. Go to [cron-job.org](https://cron-job.org/) and sign in.
 2. Click **Create Cronjob**.
 3. **Title**: `Notes App Keep-Alive`
-4. **URL**: `https://<your-render-backend-url>.onrender.com/api/health`
+4. **URL**: `https://notes-app-api-ylzn.onrender.com/api/health`
 5. **Schedule**: Select **Every 10 minutes** (or **Every 14 minutes**).
 6. Click **Create**. Your backend will remain active 24/7 without cold-start delays.
 
