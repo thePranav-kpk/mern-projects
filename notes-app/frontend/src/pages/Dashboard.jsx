@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import NoteCard from "../components/NoteCard";
 import AddEditNoteModal from "../components/AddEditNoteModal";
+import API_URL from "../config";
 
 const Dashboard = () => {
   const [notes, setNotes] = useState([]);
@@ -17,7 +18,7 @@ const Dashboard = () => {
   const fetchNotes = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/v1/notes", {
+      const response = await fetch(`${API_URL}/api/v1/notes`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -46,7 +47,7 @@ const Dashboard = () => {
   // Toggle Pinned Status
   const handlePinNote = async (note) => {
     try {
-      const response = await fetch(`/api/v1/notes/${note._id}`, {
+      const response = await fetch(`${API_URL}/api/v1/notes/${note._id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -68,7 +69,7 @@ const Dashboard = () => {
     if (!window.confirm("Are you sure you want to delete this note?")) return;
 
     try {
-      const response = await fetch(`/api/v1/notes/${noteId}`, {
+      const response = await fetch(`${API_URL}/api/v1/notes/${noteId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -86,7 +87,9 @@ const Dashboard = () => {
   // Save Note (Create or Update)
   const handleSaveNote = async (noteData) => {
     const isEditing = !!noteToEdit;
-    const url = isEditing ? `/api/v1/notes/${noteToEdit._id}` : "/api/v1/notes";
+    const url = isEditing
+      ? `${API_URL}/api/v1/notes/${noteToEdit._id}`
+      : `${API_URL}/api/v1/notes`;
     const method = isEditing ? "PATCH" : "POST";
 
     try {
