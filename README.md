@@ -12,7 +12,7 @@ A collection of 5 production-grade full-stack web applications built using the *
 | **To-Do App** | [Live App](https://mern-projects-mcew.vercel.app/) | [API Service](https://todo-api-6bbn.onrender.com) | [`/api/health`](https://todo-api-6bbn.onrender.com/api/health) | 🟢 **Live** |
 | **URL Shortener** | [Live App](https://mern-projects-pzhp.vercel.app/) | [API Service](https://url-shortener-api-xdei.onrender.com) | [`/api/health`](https://url-shortener-api-xdei.onrender.com/api/health) | 🟢 **Live** |
 | **Notes App** | [Live App](https://mern-projects-r6en.vercel.app/login) | [API Service](https://notes-app-api-ylzn.onrender.com) | [`/api/health`](https://notes-app-api-ylzn.onrender.com/api/health) | 🟢 **Live** |
-| **Real-Time Chat App** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
+| **Real-Time Chat App** | [Live App](https://mern-projects-aghm.vercel.app/) | [API Service](https://chat-app-api-hx82.onrender.com) | [`/api/health`](https://chat-app-api-hx82.onrender.com/api/health) | 🟢 **Live** |
 
 ---
 
@@ -62,6 +62,7 @@ Each project follows an enterprise decoupled cloud architecture:
 *   **Highlights**: Rich Markdown formatting, tag categorization, secure user session management.
 
 ### 5. [Real-Time WebSocket Chat Application](./chat-app/README.md)
+*   **Live App**: [https://mern-projects-aghm.vercel.app](https://mern-projects-aghm.vercel.app)
 *   **Tech**: React, Socket.IO, Express, Express-Session, MongoDB Connect-Mongo, Nginx.
 *   **Highlights**: Bi-directional real-time messaging, typing indicators, room management, session authentication over WebSockets.
 

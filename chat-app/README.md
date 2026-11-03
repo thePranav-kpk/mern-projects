@@ -1,7 +1,10 @@
 # RealChat: Real-Time Chat Application (Full-Stack TypeScript)
 
-*   **Live Application**: [https://mern-projects-three-flame.vercel.app](https://mern-projects-three-flame.vercel.app)
-*   **Live API Endpoint**: [https://mern-projects-5uwr.onrender.com/api/auth/me](https://mern-projects-5uwr.onrender.com/api/auth/me) (Requires Session Authentication)
+*   **Live Application (Vercel)**: [https://mern-projects-aghm.vercel.app](https://mern-projects-aghm.vercel.app)
+*   **Live API Backend (Render)**: [https://chat-app-api-hx82.onrender.com](https://chat-app-api-hx82.onrender.com)
+*   **Health Check Endpoint**: [https://chat-app-api-hx82.onrender.com/api/health](https://chat-app-api-hx82.onrender.com/api/health)
+*   **API Route**: `https://chat-app-api-hx82.onrender.com/api/auth`
+*   **WebSocket Endpoint**: `wss://chat-app-api-hx82.onrender.com`
 
 A full-stack real-time chat application built using Node.js, Express 5, React 19, TypeScript, Socket.io, and MongoDB. This project implements WebSocket-based messaging with room broadcasting, session-based authentication persisted in MongoDB via `connect-mongo`, cross-origin cookie negotiation, and live presence tracking (typing indicators, online user lists, edit/delete message events).
 
@@ -69,10 +72,11 @@ The application is architected for decoupled cloud deployment: the **Express + S
 ```
 ┌─────────────────────────────────┐           ┌──────────────────────────────────┐
 │         Vercel Frontend         │  HTTPS    │          Render Backend          │
-│  (https://<app>.vercel.app)     │ ────────> │   (https://<api>.onrender.com)   │
-│  - React 19 + Tailwind v4       │  REST     │   - Express 5 + Socket.io        │
-│  - socket.io-client             │ WebSocket │   - MongoStore (express-session) │
-│  - Config: VITE_API_URL         │ ────────> │   - Health: /api/health          │
+│ https://mern-projects-aghm.     │ ────────> │ https://chat-app-api-hx82.       │
+│ vercel.app                      │  REST     │ onrender.com                     │
+│ - React 19 + Tailwind v4       │ WebSocket │ - Express 5 + Socket.io        │
+│ - socket.io-client             │ ────────> │ - MongoStore (express-session) │
+│ - Config: VITE_API_URL         │           │ - Health: /api/health          │
 └─────────────────────────────────┘           └──────────────────────────────────┘
                                                                ▲
                                                                │ Ping every 10-14 min
@@ -132,7 +136,7 @@ The application is architected for decoupled cloud deployment: the **Express + S
 1. Go to [cron-job.org](https://cron-job.org/) and sign in.
 2. Click **Create Cronjob**.
 3. **Title**: `Chat App Keep-Alive`
-4. **URL**: `https://<your-chat-render-backend-url>.onrender.com/api/health`
+4. **URL**: `https://chat-app-api-hx82.onrender.com/api/health`
 5. **Schedule**: Select **Every 10 minutes** (or **Every 14 minutes**).
 6. Click **Create**.
 
