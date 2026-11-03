@@ -1,7 +1,9 @@
 # MERN Expense Tracker & Financial Analytics
 
-*   **Live Application**: [https://expense-tracker-ogmi.onrender.com](https://expense-tracker-ogmi.onrender.com)
-*   **Live API Endpoint**: [https://expense-tracker-ogmi.onrender.com/api/v1/transactions](https://expense-tracker-ogmi.onrender.com/api/v1/transactions) (Requires Authentication)
+*   **Live Application (Vercel)**: [https://mern-projects-eight-virid.vercel.app](https://mern-projects-eight-virid.vercel.app)
+*   **Live API Backend (Render)**: [https://expense-tracker-api-a6fu.onrender.com](https://expense-tracker-api-a6fu.onrender.com)
+*   **Health Check Endpoint**: [https://expense-tracker-api-a6fu.onrender.com/api/health](https://expense-tracker-api-a6fu.onrender.com/api/health)
+*   **API Route**: `https://expense-tracker-api-a6fu.onrender.com/api/v1/transactions` (Requires Bearer JWT)
 
 A multi-user financial tracking and analytics application built using the MERN stack (MongoDB, Express 5, React 19, Node.js). This project implements server-side MongoDB Aggregation Pipelines to compute financial summary metrics (Total Income, Total Expense, Net Balance) and category-wise expenditure breakdowns, paired with a React `useReducer` state management architecture.
 
@@ -63,10 +65,11 @@ The application is architected for decoupled cloud deployment: the **Express API
 ```
 ┌─────────────────────────────────┐           ┌──────────────────────────────────┐
 │         Vercel Frontend         │  HTTPS    │          Render Backend          │
-│  (https://<app>.vercel.app)     │ ────────> │   (https://<api>.onrender.com)   │
-│  - React 19 + Vite SPA          │  REST/JWT │   - Express 5 REST API           │
-│  - vercel.json SPA rewrites     │           │   - MongoDB Atlas Aggregations   │
-│  - Config: VITE_API_URL         │           │   - Health: /api/health          │
+│ https://mern-projects-eight-    │ ────────> │ https://expense-tracker-api-     │
+│ virid.vercel.app                │  REST/JWT │ a6fu.onrender.com                │
+│ - React 19 + Vite SPA           │           │ - Express 5 REST API             │
+│ - vercel.json SPA rewrites      │           │ - MongoDB Atlas Aggregations     │
+│ - Config: VITE_API_URL          │           │ - Health: /api/health            │
 └─────────────────────────────────┘           └──────────────────────────────────┘
                                                                ▲
                                                                │ Ping every 10-14 min
@@ -132,14 +135,14 @@ Render's free tier services spin down after 15 minutes of inactivity, causing a 
 1. Go to [cron-job.org](https://cron-job.org/) and sign up for a free account.
 2. Click **Create Cronjob**.
 3. **Title**: `Expense Tracker Keep-Alive`
-4. **URL**: `https://<your-render-api-url>.onrender.com/api/health`
+4. **URL**: `https://expense-tracker-api-a6fu.onrender.com/api/health`
 5. **Execution Schedule**: Select **Every 10 minutes** (or **Every 14 minutes**).
 6. Click **Create**. Your backend will now stay warm 24/7.
 
 #### Option B: UptimeRobot (Free uptime monitor + ping)
 1. Create a free account on [UptimeRobot](https://uptimerobot.com/).
 2. Add New Monitor → Monitor Type: `HTTP(s)`.
-3. URL: `https://<your-render-api-url>.onrender.com/api/health`.
+3. URL: `https://expense-tracker-api-a6fu.onrender.com/api/health`.
 4. Monitoring Interval: `5 minutes` or `10 minutes`.
 
 ---
