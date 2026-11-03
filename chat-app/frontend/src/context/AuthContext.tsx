@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import API_URL from "../config";
 
 interface User {
   _id: string;
@@ -30,7 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  const baseUrl = API_URL || "http://localhost:5000";
 
   useEffect(() => {
     const fetchMe = async () => {

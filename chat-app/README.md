@@ -31,7 +31,11 @@ chat-app/
 │   │   ├── routes/          # auth.ts, message.ts (Express route mappings)
 │   │   ├── sockets/         # chatHandler.ts (join_room, send/edit/delete/typing events)
 │   │   ├── types/           # TypeScript type declarations
-│   │   └── server.ts        # Express + HTTP Server + Socket.io entry point
+│   │   └── server.ts        # Express + HTTP Server + Socket.io entry point (with /api/health)
+│   ├── dist/                # Compiled JavaScript production build output (ignored by Git)
+│   ├── .env.example         # Template for environment variables
+│   ├── .gitignore           # Excludes node_modules, dist, .env
+│   ├── render.yaml          # Render Infrastructure-as-Code Blueprint
 │   ├── Dockerfile           # 2-Stage Multi-Stage TypeScript build (Node 20 Alpine)
 │   ├── tsconfig.json        # TypeScript compiler configuration (module: Node16)
 │   └── package.json         # Node scripts & TS dependencies
@@ -40,9 +44,11 @@ chat-app/
 │   │   ├── components/      # ProtectedRoute.tsx
 │   │   ├── context/         # AuthContext.tsx (session state), SocketContext.tsx (socket lifecycle)
 │   │   ├── pages/           # Login.tsx, Register.tsx, ChatRoom.tsx
+│   │   ├── config.ts        # Centralized API base URL config (VITE_API_URL)
 │   │   ├── App.tsx          # React Router tree & Context providers
 │   │   ├── index.css        # Tailwind v4 import & global resets
 │   │   └── main.tsx
+│   ├── .env.example         # Frontend environment variables template
 │   ├── Dockerfile           # Multi-stage: Vite TS build → Nginx serve
 │   ├── nginx.conf           # Nginx config: SPA routing, /api proxy, /socket.io WebSocket upgrade
 │   ├── vercel.json          # SPA rewrite rule for React Router
@@ -53,6 +59,84 @@ chat-app/
 ├── .dockerignore            # Excludes node_modules, dist, .env from build context
 └── README.md                # Project documentation
 ```
+
+---
+
+## ☁️ Cloud Deployment (Render + Vercel)
+
+The application is architected for decoupled cloud deployment: the **Express + Socket.io backend on Render** and the **React Vite TypeScript frontend on Vercel**.
+
+```
+┌─────────────────────────────────┐           ┌──────────────────────────────────┐
+│         Vercel Frontend         │  HTTPS    │          Render Backend          │
+│  (https://<app>.vercel.app)     │ ────────> │   (https://<api>.onrender.com)   │
+│  - React 19 + Tailwind v4       │  REST     │   - Express 5 + Socket.io        │
+│  - socket.io-client             │ WebSocket │   - MongoStore (express-session) │
+│  - Config: VITE_API_URL         │ ────────> │   - Health: /api/health          │
+└─────────────────────────────────┘           └──────────────────────────────────┘
+                                                               ▲
+                                                               │ Ping every 10-14 min
+                                              ┌────────────────┴─────────────────┐
+                                              │    Keep-Alive Cron Job Monitor   │
+                                              │   (cron-job.org / GitHub Action) │
+                                              └──────────────────────────────────┘
+```
+
+### 1. Backend Deployment — Render
+
+1. Sign in to [Render](https://render.com/) and click **New +** → **Web Service**.
+2. Connect your GitHub repository (`mern-projects`).
+3. Set the following build configuration:
+   - **Name**: `chat-app-api` *(or your custom name)*
+   - **Root Directory**: `chat-app/backend`
+   - **Runtime**: `Node`
+   - **Build Command**: `npm install --include=dev && npm run build`
+   - **Start Command**: `node dist/server.js`
+   - **Instance Type**: `Free`
+4. Expand **Advanced** and set the **Health Check Path** to `/api/health`.
+5. Under **Environment Variables**, add:
+   | Key | Value | Description |
+   | :--- | :--- | :--- |
+   | `MONGO_URI` | `mongodb+srv://pranav06:Pranav2006@todo.mq5j745.mongodb.net/chat_db?retryWrites=true&w=majority` | MongoDB Atlas URI |
+   | `SESSION_SECRET` | `your_secret_session_key` | Secret key for express-session |
+   | `FRONTEND_URL` | `https://<your-chat-vercel-url>.vercel.app` | Vercel frontend URL for CORS & session cookies |
+   | `NODE_ENV` | `production` | Production environment flag |
+6. Click **Deploy Web Service**.
+7. Test the health check endpoint: `https://<your-service>.onrender.com/api/health`. It returns:
+   ```json
+   { "status": "ok", "service": "chat-app-api", "timestamp": "..." }
+   ```
+
+*(Alternatively: Deploy using the included [`chat-app/backend/render.yaml`](backend/render.yaml) Blueprint).*
+
+---
+
+### 2. Frontend Deployment — Vercel
+
+1. Sign in to [Vercel](https://vercel.com/) and click **Add New...** → **Project**.
+2. Import the `mern-projects` GitHub repository.
+3. Configure the build settings:
+   - **Project Name**: `chat-app-frontend`
+   - **Framework Preset**: `Vite`
+   - **Root Directory**: Click **Edit** and select `chat-app/frontend`
+4. Expand **Environment Variables** and add:
+   | Key | Value |
+   | :--- | :--- |
+   | `VITE_API_URL` | `https://<your-chat-render-backend-url>.onrender.com` *(no trailing slash)* |
+5. Click **Deploy**.
+
+---
+
+### 3. Keep-Alive Cron Job (Prevents Free-Tier Sleep)
+
+1. Go to [cron-job.org](https://cron-job.org/) and sign in.
+2. Click **Create Cronjob**.
+3. **Title**: `Chat App Keep-Alive`
+4. **URL**: `https://<your-chat-render-backend-url>.onrender.com/api/health`
+5. **Schedule**: Select **Every 10 minutes** (or **Every 14 minutes**).
+6. Click **Create**.
+
+---
 
 ---
 
@@ -177,10 +261,11 @@ Open your browser and navigate to `http://localhost:5173`. The Vite proxy forwar
 
 ## 🔌 API Endpoint Documentation
 
-### Auth Routes — `/api/auth`
+### Auth & Health Routes — `/api`
 
 | HTTP Method | Route Endpoint | Description | Request Body | Success Status |
 | :--- | :--- | :--- | :--- | :--- |
+| **GET** | `/api/health` | Service health check & keep-alive | *None* | `200 OK` |
 | **POST** | `/api/auth/register` | Register a new user | `{ "name": "String", "email": "String", "password": "String" }` | `201 Created` |
 | **POST** | `/api/auth/login` | Login & create session | `{ "email": "String", "password": "String" }` | `200 OK` |
 | **POST** | `/api/auth/logout` | Destroy session & clear cookie | *None* | `200 OK` |

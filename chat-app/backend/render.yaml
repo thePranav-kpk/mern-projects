@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: chat-app-api
+    env: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: node dist/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: NODE_ENV
+        value: production

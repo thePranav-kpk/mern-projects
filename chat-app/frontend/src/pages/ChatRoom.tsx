@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
+import API_URL from "../config";
 
 interface Message {
   _id: string;
@@ -31,7 +32,7 @@ const ChatRoom = () => {
 
   const rooms = ["general", "tech", "other"];
 
-  const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  const baseUrl = API_URL || "http://localhost:5000";
 
   // Fetch all messages belonging to activeRoom
   useEffect(() => {

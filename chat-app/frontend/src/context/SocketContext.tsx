@@ -8,6 +8,7 @@ import {
 } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "./AuthContext";
+import API_URL from "../config";
 
 interface SocketContextType {
   socket: Socket | null;
@@ -23,7 +24,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
-  const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  const baseUrl = API_URL || "http://localhost:5000";
 
   useEffect(() => {
     if (!user) return;
