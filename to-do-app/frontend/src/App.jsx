@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import TodoForm from "./components/TodoForm";
 import TodoList from "./components/TodoList";
+import API_URL from "./config";
 import "./App.css";
 
-// Switch URL dynamically based on environment
-const API_URL = import.meta.env.DEV
-  ? "/api/v1/todos"
-  : "https://todo-backend-whej.onrender.com/api/v1/todos"; // Actual Render backend URL here
+const TODOS_URL = `${API_URL}/api/v1/todos`;
 
 function App() {
   const [todos, setTodos] = useState([]);
@@ -16,11 +14,11 @@ function App() {
   // Fetch all todos from the database when app loads
   const fetchTodos = async () => {
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(TODOS_URL);
       if (!response.ok) throw new Error("Failed to fetch todos");
 
       const data = await response.json();
-      setTodos(data.todos);
+      setTodos(data.todos || []);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -40,7 +38,7 @@ function App() {
   // Handler: Add a new todo to the database
   const addTodo = async (title) => {
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(TODOS_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -62,7 +60,7 @@ function App() {
     if (!todoToToggle) return;
 
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await fetch(`${TODOS_URL}/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -84,7 +82,7 @@ function App() {
   // Handler: Delete a todo from the database
   const deleteTodo = async (id) => {
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await fetch(`${TODOS_URL}/${id}`, {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete todo");

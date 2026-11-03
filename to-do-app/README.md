@@ -29,22 +29,103 @@ to-do-app/
 │   ├── middleware/           # asyncWrapper, error-handler, not-found
 │   ├── models/               # Mongoose schemas
 │   ├── routes/               # Express route mappings
-│   ├── .env                  # Environment configurations (local only)
+│   ├── .env.example          # Environment variables template
+│   ├── .gitignore            # Excludes node_modules & .env
+│   ├── render.yaml           # Render Infrastructure-as-Code Blueprint
 │   ├── package.json          # Node scripts & dependencies
-│   └── server.js             # Express application entry point
+│   └── server.js             # Express entry point (with /api/health endpoint)
 ├── frontend/
 │   ├── src/
 │   │   ├── components/       # TodoForm, TodoList, TodoItem
+│   │   ├── config.js         # Centralized API base URL config (VITE_API_URL)
 │   │   ├── App.css           # Premium glassmorphic dark theme styles
 │   │   ├── App.jsx           # Main API fetching & state coordinator
 │   │   ├── index.css         # Global variables & font registers
 │   │   └── main.jsx
+│   ├── .env.example          # Frontend environment variables template
+│   ├── vercel.json           # Vercel SPA rewrite rules
 │   ├── package.json          # Vite React scripts & configurations
 │   └── vite.config.js        # Vite build tool config with dev server proxy
 ├── Dockerfile                # Multi-stage Docker build
 ├── .dockerignore             # Excludes node_modules, dist, .env from build context
 └── README.md                 # Project documentation
 ```
+
+---
+
+## ☁️ Cloud Deployment (Render + Vercel)
+
+The application is architected for decoupled cloud deployment: the **Express API backend on Render** and the **React Vite frontend on Vercel**.
+
+```
+┌─────────────────────────────────┐           ┌──────────────────────────────────┐
+│         Vercel Frontend         │  HTTPS    │          Render Backend          │
+│  (https://<app>.vercel.app)     │ ────────> │   (https://<api>.onrender.com)   │
+│  - React 19 + Vite SPA          │   REST    │   - Express 5 REST API           │
+│  - vercel.json SPA rewrites     │           │   - MongoDB Atlas Cloud DB       │
+│  - Config: VITE_API_URL         │           │   - Health: /api/health          │
+└─────────────────────────────────┘           └──────────────────────────────────┘
+                                                               ▲
+                                                               │ Ping every 10-14 min
+                                              ┌────────────────┴─────────────────┐
+                                              │    Keep-Alive Cron Job Monitor   │
+                                              │   (cron-job.org / GitHub Action) │
+                                              └──────────────────────────────────┘
+```
+
+### 1. Backend Deployment — Render
+
+1. Sign in to [Render](https://render.com/) and click **New +** → **Web Service**.
+2. Connect your GitHub repository (`mern-projects`).
+3. Set the following build configuration:
+   - **Name**: `to-do-app-api` *(or your choice)*
+   - **Root Directory**: `to-do-app/backend`
+   - **Runtime**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `node server.js`
+   - **Instance Type**: `Free`
+4. Expand **Advanced** and set the **Health Check Path** to `/api/health`.
+5. Under **Environment Variables**, add:
+   | Key | Value | Description |
+   | :--- | :--- | :--- |
+   | `MONGO_URI` | `mongodb+srv://pranav06:Pranav2006@todo.mq5j745.mongodb.net/todo_db?retryWrites=true&w=majority` | MongoDB Atlas URI |
+   | `NODE_ENV` | `production` | Production environment flag |
+6. Click **Deploy Web Service**.
+7. Test the health check endpoint: `https://<your-service>.onrender.com/api/health`. It returns:
+   ```json
+   { "status": "ok", "service": "to-do-app-api", "timestamp": "..." }
+   ```
+
+*(Alternatively: Deploy using the included [`to-do-app/backend/render.yaml`](backend/render.yaml) Blueprint).*
+
+---
+
+### 2. Frontend Deployment — Vercel
+
+1. Sign in to [Vercel](https://vercel.com/) and click **Add New...** → **Project**.
+2. Import the `mern-projects` GitHub repository.
+3. Configure the build settings:
+   - **Project Name**: `to-do-app-frontend`
+   - **Framework Preset**: `Vite`
+   - **Root Directory**: Click **Edit** and select `to-do-app/frontend`
+4. Expand **Environment Variables** and add:
+   | Key | Value |
+   | :--- | :--- |
+   | `VITE_API_URL` | `https://<your-render-backend-url>.onrender.com` *(no trailing slash)* |
+5. Click **Deploy**.
+
+---
+
+### 3. Keep-Alive Cron Job (Prevents Free-Tier Sleep)
+
+1. Go to [cron-job.org](https://cron-job.org/) and sign in.
+2. Click **Create Cronjob**.
+3. **Title**: `To-Do App Keep-Alive`
+4. **URL**: `https://<your-render-backend-url>.onrender.com/api/health`
+5. **Schedule**: Select **Every 10 minutes** (or **Every 14 minutes**).
+6. Click **Create**.
+
+---
 
 ---
 
@@ -136,6 +217,7 @@ All endpoints are prefix-mounted under `/api/v1/todos`.
 
 | HTTP Method | Route Endpoint | Description | Request Body Format | Success Status |
 | :--- | :--- | :--- | :--- | :--- |
+| **GET** | `/api/health` | Health check & keep-alive monitor | *None* | `200 OK` |
 | **GET** | `/api/v1/todos` | Fetch all Todo tasks | *None* | `200 OK` |
 | **POST** | `/api/v1/todos` | Create a new Todo | `{ "title": "String" }` | `201 Created` |
 | **GET** | `/api/v1/todos/:id` | Fetch a single Todo by ID | *None* | `200 OK` |
