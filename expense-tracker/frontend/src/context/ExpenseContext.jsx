@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useCallback } from "react";
+import API_URL from "../config";
 
 const ExpenseContext = createContext();
 
@@ -49,13 +50,13 @@ export const ExpenseProvider = ({ children }) => {
     try {
       // Allows parallel calling of 3 API requests
       const [txRes, sumRes, catRes] = await Promise.all([
-        fetch("/api/v1/transactions", {
+        fetch(`${API_URL}/api/v1/transactions`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("/api/v1/transactions/summary", {
+        fetch(`${API_URL}/api/v1/transactions/summary`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("/api/v1/transactions/category-breakdown?type=expense", {
+        fetch(`${API_URL}/api/v1/transactions/category-breakdown?type=expense`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

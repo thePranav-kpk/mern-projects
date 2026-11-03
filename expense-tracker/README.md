@@ -28,18 +28,23 @@ expense-tracker/
 │   ├── middleware/           # async.js, error-handler.js, not-found.js, auth.js (JWT guard)
 │   ├── models/               # User.js & Transaction.js (Enums, Min validators)
 │   ├── routes/               # Express auth & transactions route mappings
-│   ├── .env                  # Environment configurations (local only)
+│   ├── .env.example          # Template for backend environment variables
+│   ├── .gitignore            # Excludes node_modules & .env
+│   ├── render.yaml           # Render Infrastructure-as-Code Blueprint
 │   ├── Dockerfile            # Backend-only Node.js container
 │   ├── package.json          # Node scripts & dependencies
-│   └── server.js             # Express entry point (serves compiled static frontend)
+│   └── server.js             # Express entry point (with /api/health endpoint)
 ├── frontend/
 │   ├── src/
 │   │   ├── components/       # SummaryCards, CategoryBreakdown, TransactionForm, TransactionList, Navbar, ProtectedRoute
 │   │   ├── context/          # ExpenseContext (useReducer, Promise.all) & AuthContext
 │   │   ├── pages/            # Login, Register, Dashboard
+│   │   ├── config.js         # Centralized API base URL config (VITE_API_URL)
 │   │   ├── App.jsx           # Main router tree & Context providers
 │   │   ├── index.css         # Dark glassmorphism layout & theme variables
 │   │   └── main.jsx
+│   ├── .env.example          # Template for frontend environment variables
+│   ├── vercel.json           # Vercel SPA rewrite rules
 │   ├── Dockerfile            # Multi-stage: Vite build → Nginx serve
 │   ├── nginx.conf            # Nginx config: SPA routing + /api reverse proxy to backend
 │   ├── package.json          # Vite React scripts & configurations
@@ -48,6 +53,96 @@ expense-tracker/
 ├── .dockerignore             # Excludes node_modules, dist, .env from build context
 └── README.md                 # Project documentation
 ```
+
+---
+
+## ☁️ Cloud Deployment (Render + Vercel)
+
+The application is architected for decoupled cloud deployment: the **Express API backend on Render** and the **React Vite frontend on Vercel**.
+
+```
+┌─────────────────────────────────┐           ┌──────────────────────────────────┐
+│         Vercel Frontend         │  HTTPS    │          Render Backend          │
+│  (https://<app>.vercel.app)     │ ────────> │   (https://<api>.onrender.com)   │
+│  - React 19 + Vite SPA          │  REST/JWT │   - Express 5 REST API           │
+│  - vercel.json SPA rewrites     │           │   - MongoDB Atlas Aggregations   │
+│  - Config: VITE_API_URL         │           │   - Health: /api/health          │
+└─────────────────────────────────┘           └──────────────────────────────────┘
+                                                               ▲
+                                                               │ Ping every 10-14 min
+                                              ┌────────────────┴─────────────────┐
+                                              │    Keep-Alive Cron Job Monitor   │
+                                              │   (cron-job.org / GitHub Action) │
+                                              └──────────────────────────────────┘
+```
+
+### 1. Backend Deployment — Render
+
+1. **Sign in** to [Render](https://render.com/) and click **New +** → **Web Service**.
+2. **Connect your GitHub repository** (`mern-projects`).
+3. Set the following build configuration:
+   - **Name**: `expense-tracker-api` (or your choice)
+   - **Root Directory**: `expense-tracker/backend`
+   - **Environment**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `node server.js`
+   - **Instance Type**: `Free`
+4. Expand **Advanced** and set the **Health Check Path** to `/api/health`.
+5. Add the **Environment Variables**:
+   | Variable Key | Value / Example | Description |
+   | :--- | :--- | :--- |
+   | `MONGO_URI` | `mongodb+srv://...` | MongoDB Atlas connection string |
+   | `JWT_SECRET` | `your_secure_jwt_secret` | Secret key used to sign & verify JWT tokens |
+   | `NODE_ENV` | `production` | Production environment flag |
+6. Click **Deploy Web Service**.
+7. Once deployed, test your health check at `https://<your-service-name>.onrender.com/api/health`. It should return:
+   ```json
+   {
+     "status": "ok",
+     "service": "expense-tracker-api",
+     "timestamp": "2026-11-03T16:00:00.000Z"
+   }
+   ```
+
+*(Alternatively: Render detects the blueprint at [`expense-tracker/backend/render.yaml`](backend/render.yaml) automatically if deployed via Blueprints).*
+
+---
+
+### 2. Frontend Deployment — Vercel
+
+1. **Sign in** to [Vercel](https://vercel.com/) and click **Add New...** → **Project**.
+2. **Import** your `mern-projects` GitHub repository.
+3. In the project configuration screen:
+   - Set **Framework Preset**: `Vite`
+   - Set **Root Directory**: click **Edit** and choose `expense-tracker/frontend`
+4. Expand **Environment Variables** and add:
+   | Variable Key | Value |
+   | :--- | :--- |
+   | `VITE_API_URL` | `https://<your-backend-name>.onrender.com` *(no trailing slash)* |
+5. Click **Deploy**.
+6. The included [`vercel.json`](frontend/vercel.json) rewrites all client-side paths (`/login`, `/register`, `/dashboard`) to `index.html`, ensuring seamless page refreshes.
+
+---
+
+### 3. Keep-Alive Cron Job (Prevent Render Sleep)
+
+Render's free tier services spin down after 15 minutes of inactivity, causing a 50+ second "cold start" delay on the next request. A cron job prevents this by pinging the health endpoint every 10–14 minutes.
+
+#### Option A: cron-job.org (Recommended — Free & 1-minute setup)
+1. Go to [cron-job.org](https://cron-job.org/) and sign up for a free account.
+2. Click **Create Cronjob**.
+3. **Title**: `Expense Tracker Keep-Alive`
+4. **URL**: `https://<your-render-api-url>.onrender.com/api/health`
+5. **Execution Schedule**: Select **Every 10 minutes** (or **Every 14 minutes**).
+6. Click **Create**. Your backend will now stay warm 24/7.
+
+#### Option B: UptimeRobot (Free uptime monitor + ping)
+1. Create a free account on [UptimeRobot](https://uptimerobot.com/).
+2. Add New Monitor → Monitor Type: `HTTP(s)`.
+3. URL: `https://<your-render-api-url>.onrender.com/api/health`.
+4. Monitoring Interval: `5 minutes` or `10 minutes`.
+
+---
 
 ---
 

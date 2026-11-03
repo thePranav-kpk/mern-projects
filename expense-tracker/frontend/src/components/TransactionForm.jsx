@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useExpense } from "../context/ExpenseContext";
+import API_URL from "../config";
 
 const CATEGORIES = [
   "Housing",
@@ -36,7 +37,7 @@ const TransactionForm = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch("/api/v1/transactions", {
+      const response = await fetch(`${API_URL}/api/v1/transactions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

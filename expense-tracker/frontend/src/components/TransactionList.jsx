@@ -1,4 +1,5 @@
 import { useExpense } from "../context/ExpenseContext";
+import API_URL from "../config";
 
 const TransactionList = () => {
   const { transactions, dispatch, fetchExpenseData } = useExpense();
@@ -16,7 +17,7 @@ const TransactionList = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this transaction?")) return;
     const token = localStorage.getItem("token");
-    const response = await fetch(`/api/v1/transactions/${id}`, {
+    const response = await fetch(`${API_URL}/api/v1/transactions/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

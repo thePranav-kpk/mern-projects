@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect, useContext } from "react";
+import API_URL from "../config";
 
 const AuthContext = createContext();
 
@@ -16,7 +17,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
       try {
-        const response = await fetch("/api/v1/auth/me", {
+        const response = await fetch(`${API_URL}/api/v1/auth/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -39,7 +40,7 @@ export const AuthProvider = ({ children }) => {
 
   // 2.Login function
   const login = async (email, password) => {
-    const response = await fetch("/api/v1/auth/login", {
+    const response = await fetch(`${API_URL}/api/v1/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -58,7 +59,7 @@ export const AuthProvider = ({ children }) => {
 
   // 3.Register function
   const register = async (name, email, password) => {
-    const response = await fetch("/api/v1/auth/register", {
+    const response = await fetch(`${API_URL}/api/v1/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
