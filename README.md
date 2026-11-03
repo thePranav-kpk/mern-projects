@@ -8,7 +8,7 @@ A collection of 5 production-grade full-stack web applications built using the *
 
 | Application | Frontend (Vercel) | Backend API (Render) | Health Check (Keep-Alive) | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **Expense Tracker** | [Live App](https://mern-projects-eight-virid.vercel.app/login) | [API Service](https://expense-tracker-api-a6fu.onrender.com) | [`/api/health`](https://expense-tracker-api-a6fu.onrender.com/api/health) | 🟢 **Live** |
+| **Expense Tracker** | [Live App](https://mern-projects-omega-ashen.vercel.app/login) | [API Service](https://expense-tracker-api-a6fu.onrender.com) | [`/api/health`](https://expense-tracker-api-a6fu.onrender.com/api/health) | 🟢 **Live** |
 | **To-Do App** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
 | **URL Shortener** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
 | **Notes App** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
@@ -42,7 +42,7 @@ Each project follows an enterprise decoupled cloud architecture:
 ## 📦 Projects Directory
 
 ### 1. [Expense Tracker & Financial Analytics](./expense-tracker/README.md)
-*   **Live App**: [https://mern-projects-eight-virid.vercel.app](https://mern-projects-eight-virid.vercel.app)
+*   **Live App**: [https://mern-projects-omega-ashen.vercel.app](https://mern-projects-omega-ashen.vercel.app)
 *   **Tech**: React 19, Express 5, MongoDB Aggregation Pipelines (`$match`, `$group`), JWT, Docker.
 *   **Highlights**: Real-time balance calculations, category-wise breakdown aggregations, atomic `useReducer` state management.
 
@@ -75,3 +75,4 @@ Render's free tier spins down services after 15 minutes of inactivity. To keep t
    ```
 3. Set the schedule to run **Every 10 minutes** or **Every 14 minutes**.
 4. The service will respond with `{ "status": "ok", "service": "...", "timestamp": "..." }` and remain active 24/7.
+

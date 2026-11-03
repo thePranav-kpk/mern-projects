@@ -1,6 +1,6 @@
 # MERN Expense Tracker & Financial Analytics
 
-*   **Live Application (Vercel)**: [https://mern-projects-eight-virid.vercel.app](https://mern-projects-eight-virid.vercel.app)
+*   **Live Application (Vercel)**: [https://mern-projects-omega-ashen.vercel.app](https://mern-projects-omega-ashen.vercel.app)
 *   **Live API Backend (Render)**: [https://expense-tracker-api-a6fu.onrender.com](https://expense-tracker-api-a6fu.onrender.com)
 *   **Health Check Endpoint**: [https://expense-tracker-api-a6fu.onrender.com/api/health](https://expense-tracker-api-a6fu.onrender.com/api/health)
 *   **API Route**: `https://expense-tracker-api-a6fu.onrender.com/api/v1/transactions` (Requires Bearer JWT)
@@ -65,8 +65,8 @@ The application is architected for decoupled cloud deployment: the **Express API
 ```
 ┌─────────────────────────────────┐           ┌──────────────────────────────────┐
 │         Vercel Frontend         │  HTTPS    │          Render Backend          │
-│ https://mern-projects-eight-    │ ────────> │ https://expense-tracker-api-     │
-│ virid.vercel.app                │  REST/JWT │ a6fu.onrender.com                │
+│ https://mern-projects-omega-    │ ────────> │ https://expense-tracker-api-     │
+│ ashen.vercel.app                │  REST/JWT │ a6fu.onrender.com                │
 │ - React 19 + Vite SPA           │           │ - Express 5 REST API             │
 │ - vercel.json SPA rewrites      │           │ - MongoDB Atlas Aggregations     │
 │ - Config: VITE_API_URL          │           │ - Health: /api/health            │
