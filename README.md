@@ -9,7 +9,7 @@ A collection of 5 production-grade full-stack web applications built using the *
 | Application | Frontend (Vercel) | Backend API (Render) | Health Check (Keep-Alive) | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **Expense Tracker** | [Live App](https://mern-projects-omega-ashen.vercel.app/login) | [API Service](https://expense-tracker-api-a6fu.onrender.com) | [`/api/health`](https://expense-tracker-api-a6fu.onrender.com/api/health) | 🟢 **Live** |
-| **To-Do App** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
+| **To-Do App** | [Live App](https://mern-projects-mcew.vercel.app/) | [API Service](https://todo-api-6bbn.onrender.com) | [`/api/health`](https://todo-api-6bbn.onrender.com/api/health) | 🟢 **Live** |
 | **URL Shortener** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
 | **Notes App** | [Live App](https://mern-projects-r6en.vercel.app/login) | [API Service](https://notes-app-api-ylzn.onrender.com) | [`/api/health`](https://notes-app-api-ylzn.onrender.com/api/health) | 🟢 **Live** |
 | **Real-Time Chat App** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
@@ -47,6 +47,7 @@ Each project follows an enterprise decoupled cloud architecture:
 *   **Highlights**: Real-time balance calculations, category-wise breakdown aggregations, atomic `useReducer` state management.
 
 ### 2. [Task & To-Do Management](./to-do-app/README.md)
+*   **Live App**: [https://mern-projects-mcew.vercel.app](https://mern-projects-mcew.vercel.app)
 *   **Tech**: React, Express, MongoDB, RESTful CRUD, Docker.
 *   **Highlights**: Optimistic UI updates, task filtering, clean responsive design.
 

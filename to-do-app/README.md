@@ -1,7 +1,9 @@
 # MERN Task Manager (Todo App)
 
-*   **Live Application**: [https://todo-app-sm1n.onrender.com](https://todo-app-sm1n.onrender.com)
-*   **Live API Endpoint**: [https://todo-backend-whej.onrender.com/api/v1/todos](https://todo-backend-whej.onrender.com/api/v1/todos)
+*   **Live Application (Vercel)**: [https://mern-projects-mcew.vercel.app](https://mern-projects-mcew.vercel.app)
+*   **Live API Backend (Render)**: [https://todo-api-6bbn.onrender.com](https://todo-api-6bbn.onrender.com)
+*   **Health Check Endpoint**: [https://todo-api-6bbn.onrender.com/api/health](https://todo-api-6bbn.onrender.com/api/health)
+*   **API Route**: `https://todo-api-6bbn.onrender.com/api/v1/todos`
 
 
 A modern, responsive Todo application built using the MERN stack (MongoDB, Express, React, Node.js). This project implements a fully decoupled client-server architecture with a development proxy, custom error classes, clean route-controller separations, and dynamic state synchronization.
@@ -60,10 +62,11 @@ The application is architected for decoupled cloud deployment: the **Express API
 ```
 ┌─────────────────────────────────┐           ┌──────────────────────────────────┐
 │         Vercel Frontend         │  HTTPS    │          Render Backend          │
-│  (https://<app>.vercel.app)     │ ────────> │   (https://<api>.onrender.com)   │
-│  - React 19 + Vite SPA          │   REST    │   - Express 5 REST API           │
-│  - vercel.json SPA rewrites     │           │   - MongoDB Atlas Cloud DB       │
-│  - Config: VITE_API_URL         │           │   - Health: /api/health          │
+│ https://mern-projects-mcew.     │ ────────> │ https://todo-api-6bbn.           │
+│ vercel.app                      │   REST    │ onrender.com                     │
+│ - React 19 + Vite SPA           │           │ - Express REST API               │
+│ - vercel.json SPA rewrites      │           │ - MongoDB Atlas Cloud DB         │
+│ - Config: VITE_API_URL          │           │ - Health: /api/health            │
 └─────────────────────────────────┘           └──────────────────────────────────┘
                                                                ▲
                                                                │ Ping every 10-14 min
@@ -121,7 +124,7 @@ The application is architected for decoupled cloud deployment: the **Express API
 1. Go to [cron-job.org](https://cron-job.org/) and sign in.
 2. Click **Create Cronjob**.
 3. **Title**: `To-Do App Keep-Alive`
-4. **URL**: `https://<your-render-backend-url>.onrender.com/api/health`
+4. **URL**: `https://todo-api-6bbn.onrender.com/api/health`
 5. **Schedule**: Select **Every 10 minutes** (or **Every 14 minutes**).
 6. Click **Create**.
 
