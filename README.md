@@ -10,7 +10,7 @@ A collection of 5 production-grade full-stack web applications built using the *
 | :--- | :--- | :--- | :--- | :--- |
 | **Expense Tracker** | [Live App](https://mern-projects-omega-ashen.vercel.app/login) | [API Service](https://expense-tracker-api-a6fu.onrender.com) | [`/api/health`](https://expense-tracker-api-a6fu.onrender.com/api/health) | 🟢 **Live** |
 | **To-Do App** | [Live App](https://mern-projects-mcew.vercel.app/) | [API Service](https://todo-api-6bbn.onrender.com) | [`/api/health`](https://todo-api-6bbn.onrender.com/api/health) | 🟢 **Live** |
-| **URL Shortener** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
+| **URL Shortener** | [Live App](https://mern-projects-pzhp.vercel.app/) | [API Service](https://url-shortener-api-xdei.onrender.com) | [`/api/health`](https://url-shortener-api-xdei.onrender.com/api/health) | 🟢 **Live** |
 | **Notes App** | [Live App](https://mern-projects-r6en.vercel.app/login) | [API Service](https://notes-app-api-ylzn.onrender.com) | [`/api/health`](https://notes-app-api-ylzn.onrender.com/api/health) | 🟢 **Live** |
 | **Real-Time Chat App** | *Pending Deployment* | *Pending Deployment* | `/api/health` | 🟡 Ready |
 
@@ -52,6 +52,7 @@ Each project follows an enterprise decoupled cloud architecture:
 *   **Highlights**: Optimistic UI updates, task filtering, clean responsive design.
 
 ### 3. [TrimURL - URL Shortener & Analytics](./url-shortener/README.md)
+*   **Live App**: [https://mern-projects-pzhp.vercel.app](https://mern-projects-pzhp.vercel.app)
 *   **Tech**: React 19, TypeScript, Express, Nanoid, MongoDB, QR Code generation.
 *   **Highlights**: Instant URL redirection with click-through analytics tracking and QR code download.
 

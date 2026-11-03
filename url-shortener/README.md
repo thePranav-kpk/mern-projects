@@ -1,7 +1,10 @@
 # TrimURL: URL Shortener (Full-Stack TypeScript)
 
-*   **Live Application**: [https://url-shortener-app-ud42.onrender.com](https://url-shortener-app-ud42.onrender.com)
-*   **Live API Endpoint**: [https://url-shortener-app-ud42.onrender.com/api/v1/urls/shorten](https://url-shortener-app-ud42.onrender.com/api/v1/urls/shorten)
+*   **Live Application (Vercel)**: [https://mern-projects-pzhp.vercel.app](https://mern-projects-pzhp.vercel.app)
+*   **Live API Backend (Render)**: [https://url-shortener-api-xdei.onrender.com](https://url-shortener-api-xdei.onrender.com)
+*   **Health Check Endpoint**: [https://url-shortener-api-xdei.onrender.com/api/health](https://url-shortener-api-xdei.onrender.com/api/health)
+*   **API Route**: `https://url-shortener-api-xdei.onrender.com/api/v1/urls/shorten`
+*   **Redirect Route**: `https://url-shortener-api-xdei.onrender.com/r/:shortCode` (HTTP 302)
 
 A full-stack TypeScript URL shortener and click analytics web application built using Node.js, Express 5, React 19, TypeScript, and MongoDB. This project generates unique 6-character collision-resistant short codes (`nanoid`), forwards browsers using HTTP `302 Found` redirection headers, atomically increments click analytics via MongoDB `$inc`, and renders dynamic vector QR codes for instant mobile sharing.
 
@@ -60,10 +63,11 @@ The application is architected for decoupled cloud deployment: the **Express Typ
 ```
 ┌─────────────────────────────────┐           ┌──────────────────────────────────┐
 │         Vercel Frontend         │  HTTPS    │          Render Backend          │
-│  (https://<app>.vercel.app)     │ ────────> │   (https://<api>.onrender.com)   │
-│  - React 19 + TypeScript SPA    │   REST    │   - Express 5 + TypeScript API   │
-│  - QR Code Vector Generation    │ Redirects │   - Atomic MongoDB Clicks ($inc) │
-│  - Config: VITE_API_URL         │           │   - Health: /api/health          │
+│ https://mern-projects-pzhp.     │ ────────> │ https://url-shortener-api-xdei.  │
+│ vercel.app                      │   REST    │ onrender.com                     │
+│ - React 19 + TypeScript SPA    │ Redirects │ - Express 5 + TypeScript API   │
+│ - QR Code Vector Generation    │           │ - Atomic MongoDB Clicks ($inc) │
+│ - Config: VITE_API_URL         │           │ - Health: /api/health          │
 └─────────────────────────────────┘           └──────────────────────────────────┘
                                                                ▲
                                                                │ Ping every 10-14 min
@@ -121,7 +125,7 @@ The application is architected for decoupled cloud deployment: the **Express Typ
 1. Go to [cron-job.org](https://cron-job.org/) and sign in.
 2. Click **Create Cronjob**.
 3. **Title**: `URL Shortener Keep-Alive`
-4. **URL**: `https://<your-render-backend-url>.onrender.com/api/health`
+4. **URL**: `https://url-shortener-api-xdei.onrender.com/api/health`
 5. **Schedule**: Select **Every 10 minutes** (or **Every 14 minutes**).
 6. Click **Create**.
 
